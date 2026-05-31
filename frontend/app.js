@@ -3,6 +3,84 @@
    Pure JS: Navigation, 2D/3D Canvas Simulations, Chart.js Graphs
    ═══════════════════════════════════════════════════════════════ */
 
+// ═══════════════ CHAPTER NAVIGATION ═══════════════
+const chapterSelect = document.getElementById('chapter-select');
+const navKinematics = document.getElementById('nav-kinematics');
+const navVibrations = document.getElementById('nav-vibrations');
+const sidebarTitle = document.getElementById('sidebar-title');
+
+if (chapterSelect) {
+    chapterSelect.addEventListener('change', (e) => {
+        const chapter = e.target.value;
+        if (chapter === 'kinematics') {
+            if(navKinematics) navKinematics.style.display = 'block';
+            if(navVibrations) navVibrations.style.display = 'none';
+            if(sidebarTitle) sidebarTitle.innerText = "Kinematics";
+            document.querySelector('[data-page="kinematics-index"]').click();
+        } else if (chapter === 'vibrations') {
+            if(navKinematics) navKinematics.style.display = 'none';
+            if(navVibrations) navVibrations.style.display = 'block';
+            if(sidebarTitle) sidebarTitle.innerText = "Vibrations & Waves";
+            document.querySelector('[data-page="vibrations-index"]').click();
+        }
+    });
+}
+
+function buildIndexPages() {
+    const kinList = document.getElementById('kinematics-index-list');
+    const vibList = document.getElementById('vibrations-index-list');
+    
+    const kinTopics = [
+        { id: 'products', title: 'Dot & Cross Products', desc: 'Interactive visualization of vector multiplication, showing projection for dot products and normal vectors for cross products.' },
+        { id: 'vectors', title: 'Vector Addition', desc: 'Visualize the addition of 3D vectors head-to-tail.' },
+        { id: 'motion1d', title: '1D Motion Graphs', desc: 'Explore position, velocity, and acceleration over time.' },
+        { id: 'projectile', title: 'Projectile Motion', desc: 'Simulate the parabolic trajectory of a fired cannonball.' },
+        { id: 'calculus', title: 'Live Calculus Sandbox', desc: 'Write mathematical functions for acceleration and watch the system integrate them live.' },
+        { id: 'overtaking', title: 'Two-Body Overtaking', desc: 'Determine where and when two objects will meet.' },
+        { id: 'multiproj', title: 'Multi-Projectile Lab', desc: 'Compare multiple projectiles fired at different angles and speeds.' },
+        { id: 'relative-vel', title: 'Boat & River', desc: 'Calculate the resultant vector of a boat crossing a flowing river.' },
+        { id: 'carchase', title: 'Car Chase', desc: 'Relative velocity applied to a police car chasing a speeder.' },
+        { id: 'rainman', title: 'Rain & Umbrella', desc: 'Relative velocity of rain drops as observed by a moving person.' },
+        { id: 'practice-1', title: 'Practice Questions I', desc: 'A set of challenging kinematics problems with live interactive visualizers.' },
+        { id: 'practice-2', title: 'Practice Questions II', desc: 'Advanced kinematics problems including the Parabola of Safety and the Hidden Cardioid.' }
+    ];
+    
+    const vibTopics = [
+        { id: 'vib-spring', title: 'Mass on a Spring', desc: 'Shows the oscillation of a mass attached to a spring, along with a live energy bar chart tracking Kinetic and Potential energy.' },
+        { id: 'vib-circular', title: 'SHM vs Circular Motion', desc: 'An exploration of the mathematical relationships between Simple Harmonic Motion and Uniform Circular Motion.' },
+        { id: 'vib-pendulum', title: 'The Pendulum', desc: 'Simulate a simple pendulum at both small and extreme angles using true numerical integration.' },
+        { id: 'vib-waves', title: 'Transverse vs Longitudinal', desc: 'Observe how wave energy propagates through a medium in perpendicular and parallel particle oscillations.' },
+        { id: 'vib-interfere', title: 'Wave Interference', desc: 'Fire two pulses and observe how their displacements superimpose algebraically when they meet.' },
+        { id: 'vib-standing', title: 'Standing Waves', desc: 'Explore resonance and harmonics on a string by matching the excitation frequency to the natural modes.' },
+        { id: 'vib-surface', title: 'Surface Waves', desc: 'Observe particles moving in circular orbits, demonstrating how surface waves combine transverse and longitudinal motion.' },
+        { id: 'vib-doppler', title: 'The Doppler Effect', desc: 'Visualize expanding circular wavefronts and frequency shifts when a source or observer is in motion.' },
+        { id: 'vib-beats', title: 'Beat Frequencies', desc: 'Hear and visualize the pulsing envelope created by the superposition of two waves with slightly different frequencies.' },
+        { id: 'vib-tubes', title: 'Sound Tubes', desc: 'Explore the longitudinal standing waves and resonant harmonics inside open and closed air columns.' },
+        { id: 'vib-em', title: 'Electromagnetic Waves', desc: 'A 3D visualization of light as oscillating electric and magnetic fields, including the effect of a polarizing filter.' },
+        { id: 'vib-double-pendulum', title: 'Double Pendulum', desc: 'Explore deterministic chaos through real-time phase space plotting and path tracing.' }
+    ];
+    
+    function createCard(t) {
+        return `
+            <div style="border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; gap: 1.5rem; background: var(--bg); align-items: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';" onclick="document.querySelector('[data-page=${t.id}]').click();">
+                <div style="width: 200px; height: 120px; background: #e2e8f0; border-radius: 8px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#64748b; overflow: hidden; position: relative; border: 1px solid #cbd5e1;">
+                    <img src="images/thumb_${t.id}.png" alt="Screenshot" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=&quot;font-size: 0.8rem; text-align: center; padding: 1rem;&quot;>Placeholder<br><br>Save screenshot as:<br>images/thumb_${t.id}.png</span>';">
+                </div>
+                <div>
+                    <h3 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--blue); font-size: 1.25rem;">${t.title}</h3>
+                    <p style="margin: 0; color: #475569; line-height: 1.4;">${t.desc}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (kinList) kinList.innerHTML = kinTopics.map(createCard).join('');
+    if (vibList) vibList.innerHTML = vibTopics.map(createCard).join('');
+}
+
+document.addEventListener('DOMContentLoaded', buildIndexPages);
+
+
 // ═══════════════ NAVIGATION ═══════════════
 document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', e => {
@@ -26,6 +104,18 @@ document.querySelectorAll('.nav-link').forEach(link => {
         if (link.dataset.page === 'rainman') initRainMan();
         if (link.dataset.page === 'practice-1') { if(window.initPractice1) initPractice1(); }
         if (link.dataset.page === 'practice-2') { if(window.initPractice2) initPractice2(); }
+        if (link.dataset.page === 'vib-spring') { if(window.initVibrations) initVibQ1(); }
+        if (link.dataset.page === 'vib-circular') { if(window.initVibrations) initVibQ2(); }
+        if (link.dataset.page === 'vib-pendulum') { if(window.initVibrations) initVibQ3(); }
+        if (link.dataset.page === 'vib-waves') { if(window.initVibWaves) initVibWaves(); }
+        if (link.dataset.page === 'vib-interfere') { if(window.initVibInterfere) initVibInterfere(); }
+        if (link.dataset.page === 'vib-standing') { if(window.initVibStanding) initVibStanding(); }
+        if (link.dataset.page === 'vib-surface') { if(window.initVibSurface) initVibSurface(); }
+        if (link.dataset.page === 'vib-doppler') { if(window.initVibDoppler) initVibDoppler(); }
+        if (link.dataset.page === 'vib-beats') { if(window.initVibBeats) initVibBeats(); }
+        if (link.dataset.page === 'vib-tubes') { if(window.initVibTubes) initVibTubes(); }
+        if (link.dataset.page === 'vib-em') { if(window.initVibEM) initVibEM(); }
+        if (link.dataset.page === 'vib-double-pendulum') { if(window.initVibDoublePendulum) initVibDoublePendulum(); }
     });
 });
 
@@ -1510,13 +1600,12 @@ function initMultiProj() {
             ctx.save();
             ctx.translate(originX, groundY);
             ctx.rotate(-pd.theta);
-            ctx.fillStyle = color + '80';
+            ctx.globalAlpha = 0.6;
+            ctx.fillStyle = color;
             roundRect(ctx, 0, -4, 30, 8, 3); ctx.fill();
             ctx.restore();
 
-            if (!isLaunched) continue;
-
-            const currentT = Math.min(t, pd.T);
+            const currentT = isLaunched ? Math.min(t, pd.T) : 0;
             const px = pd.vx * currentT;
             const py = pd.vy * currentT - 0.5 * g * currentT * currentT;
             const screenX = originX + px * sc;
@@ -1548,10 +1637,10 @@ function initMultiProj() {
             ctx.fillStyle = color; ctx.font = 'bold 12px "Cambria Math", "Segoe UI Symbol", Arial'; ctx.textAlign = 'left';
             ctx.fillText(names[i] + ' (' + pd.angle + '°)', screenX + 10, screenY - 8);
 
-            // Draw velocity arrow if still flying
+            // Draw velocity arrow if still flying or not launched yet
             if (currentT < pd.T) {
                 const curVx = pd.vx;
-                const curVy = pd.vy - g * currentT;
+                const curVy = pd.vy - (isLaunched ? g * currentT : 0);
                 const vScale = sc * 0.15;
                 const vMag = Math.sqrt(curVx*curVx + curVy*curVy);
                 const showVals = document.getElementById('mp-showvec').checked;
