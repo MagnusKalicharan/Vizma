@@ -1,0 +1,403 @@
+/* ═══════════════════════════════════════════════════════════════
+   KINEMATICS — STYLE SHEET
+   Academic lab aesthetic (oPhysics / MIT PhET style)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    --bg: #ffffff;
+    --bg-subtle: #f5f5f5;
+    --bg-muted: #eeeeee;
+    --border: #d0d0d0;
+    --border-dark: #b0b0b0;
+    --text: #222222;
+    --text-secondary: #555555;
+    --text-muted: #888888;
+    --accent: #336699;
+    --accent-light: #e8f0f8;
+    --green: #2e7d32;
+    --red: #c62828;
+    --blue: #1565c0;
+    --orange: #e65100;
+    --purple: #6a1b9a;
+    --sidebar-w: 230px;
+    --radius: 2px;
+    --shadow: none;
+    --shadow-md: none;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* ═══════ SIDEBAR ═══════ */
+#sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: #f0f0f0;
+    border-right: 2px solid var(--border);
+    padding: 1.5rem 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.sidebar-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-header .logo-icon { font-size: 1.4rem; font-weight: bold; color: var(--accent); }
+.sidebar-header h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-top: 0.2rem; }
+.sidebar-header .sidebar-sub { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.1rem; }
+
+.nav-list { list-style: none; }
+.nav-list li { margin-bottom: 1px; }
+
+.nav-link {
+    display: block;
+    padding: 0.5rem 0.7rem;
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: background 0.1s;
+    border-left: 3px solid transparent;
+}
+.nav-link:hover { background: #e8e8e8; color: var(--text); }
+.nav-link.active { background: var(--accent-light); color: var(--accent); font-weight: 700; border-left-color: var(--accent); }
+
+.nav-num {
+    display: inline-block;
+    width: 22px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-right: 0.2rem;
+}
+
+/* ═══════ MAIN CONTENT ═══════ */
+#main-content {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 2rem 2.5rem;
+    max-width: 1200px;
+}
+
+.page { display: none; }
+.page.active-page { display: block; }
+
+/* ═══════ PAGE HEADER ═══════ */
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 2px solid var(--border);
+}
+.chapter-label {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+}
+.page-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+.lead {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 750px;
+}
+
+/* ═══════ SIMULATION ═══════ */
+.sim-section {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.sim-controls {
+    width: 240px;
+    min-width: 240px;
+    background: #f5f5f5;
+    padding: 1rem;
+    border-right: 2px solid var(--border);
+}
+.sim-controls h3 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+}
+.sim-controls h4 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+}
+.sim-controls label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.2rem;
+    font-weight: 500;
+}
+.sim-controls label strong { color: var(--text); }
+.sim-controls input[type="range"] {
+    width: 100%;
+    margin-bottom: 0.8rem;
+    accent-color: var(--accent);
+}
+.checkbox-label {
+    display: flex !important;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem !important;
+    cursor: pointer;
+    font-size: 0.78rem !important;
+}
+.checkbox-label input[type="checkbox"],
+.checkbox-label input[type="radio"] {
+    accent-color: var(--accent);
+    width: 14px;
+    height: 14px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid #2a5580;
+    border-radius: var(--radius);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s;
+    margin-top: 0.3rem;
+}
+.btn:hover { background: #2a5580; }
+
+.readout {
+    margin-top: 0.8rem;
+    padding: 0.6rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.78rem;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+}
+.readout p { margin-bottom: 0.1rem; }
+
+.sim-canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: var(--bg);
+    min-height: 420px;
+}
+.sim-canvas-wrap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* ═══════ DATA TABLES ═══════ */
+.data-table {
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.data-table th,
+.data-table td {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+.data-table th {
+    background: #e8e8e8;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.data-table td {
+    font-family: 'Courier New', monospace;
+    background: var(--bg);
+}
+
+/* ═══════ CHARTS ═══════ */
+.charts-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.chart-card {
+    flex: 1;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.6rem;
+}
+.chart-card h4 {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+.chart-card canvas {
+    width: 100% !important;
+    height: 350px !important;
+}
+
+.charts-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+}
+.chart-card-large {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.8rem;
+}
+.chart-card-large h4 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+.chart-card-large canvas {
+    width: 100% !important;
+    height: 450px !important;
+}
+
+/* ═══════ MATHEMATICS ═══════ */
+.math-section {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border);
+}
+.math-section h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+.math-intro {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.2rem;
+    line-height: 1.6;
+}
+
+.diagram-wrap {
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.diagram-svg {
+    max-width: 600px;
+    width: 100%;
+    height: auto;
+}
+.svg-label { font-family: Arial, Helvetica, sans-serif; font-size: 13px; fill: #555555; }
+
+/* Tabs */
+.math-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.2rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+}
+.math-tab {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.1s;
+    margin-bottom: -2px;
+}
+.math-tab:hover { color: var(--text-secondary); }
+.math-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.math-tab-content { display: none; }
+.math-tab-content.active { display: block; }
+
+.math-tab-content h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 1.5rem;
+    margin-bottom: 0.6rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--bg-muted);
+}
+.math-tab-content h3:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+
+.math-tab-content p {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 0.7rem;
+    max-width: 750px;
+}
+.math-tab-content strong { color: var(--text); }
+
+.math-tab-content ul {
+    margin: 0.5rem 0 0.8rem 1.5rem;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+    font-weight: 500;
+    line-height: 1.8;
+    font-size: 1rem;
+}
+.math-tab-content ul li { margin-bottom: 0.2rem; }
+
+/* Equation blocks */
+.eq-block {
+    background: #fafafa;
+    border-left: 3px solid var(--border-dark);
+    padding: 0.7rem 1rem;
+    margin: 0.8rem 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 1rem;
+    overflow-x: auto;
+}
+.eq-block.result {
+    background: #f0f7f0;
+    border-left-color: var(--green);
+}
