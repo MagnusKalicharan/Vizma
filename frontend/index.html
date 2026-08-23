@@ -2754,7 +2754,25 @@
                     </div>
                     <label class="checkbox-label" style="margin-top:1rem;"><input type="checkbox" id="la-nm-show-all" checked> Show L1, L2, and L∞ reference balls</label>
                 </div>
-                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff;">
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff; position:relative;">
+                    <div id="la-nm-legend" style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:8px 12px; font-size:0.85rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none; box-shadow:0 1px 3px rgba(0,0,0,0.1); display:none;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
+                            <div style="width:16px; height:3px; background:#e53e3e;"></div>
+                            <span>L&sup1; (diamond)</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
+                            <div style="width:16px; height:3px; background:#3182ce;"></div>
+                            <span>L&sup2; (circle)</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
+                            <div style="width:16px; height:3px; background:#38a169;"></div>
+                            <span>L&infin; (square)</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <div id="la-nm-legend-curr-color" style="width:16px; height:3px; background:#0ea5e9;"></div>
+                            <span id="la-nm-legend-curr-label">L current</span>
+                        </div>
+                    </div>
                     <canvas id="la-nm-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
                 </div>
             </div>
@@ -3392,7 +3410,7 @@
 </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="linear_algebra.js?v=33"></script>
+    <script src="linear_algebra.js?v=34"></script>
     <script src="la_rowcol.js?v=33"></script>
     <script src="la_nullspace.js?v=33"></script>
     <script src="la_orthogonality.js?v=33"></script>

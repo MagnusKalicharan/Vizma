@@ -677,24 +677,23 @@ window.initLANorms = function () {
         ctx.restore();
 
 
+        let legendEl = document.getElementById('la-nm-legend');
         if (showAll && showAll.checked) {
             let toSuper = str => str.split('').map(c => {
                 const map = {'0':'\u2070','1':'\u00B9','2':'\u00B2','3':'\u00B3','4':'\u2074','5':'\u2075','6':'\u2076','7':'\u2077','8':'\u2078','9':'\u2079','.':'\u22C5'};
                 return map[c] || c;
             }).join('');
             let pLabel = p >= 7.5 ? '\u221e' : toSuper(p.toFixed(1));
-            let items = [
-                ['L\u00b9 (diamond)', '#e53e3e'],
-                ['L\u00b2 (circle)',  '#3182ce'],
-                ['L\u221e (square)', '#38a169'],
-                ['L' + pLabel + ' (current)', pColor]
-            ];
-            items.forEach(function(item, i) {
-                ctx.fillStyle = item[1];
-                ctx.fillRect(10, 12 + i * 18, 12, 12);
-                ctx.fillStyle = '#1e293b'; ctx.font = '11px Arial';
-                ctx.fillText(item[0], 28, 22 + i * 18);
-            });
+            
+            if (legendEl) {
+                legendEl.style.display = 'block';
+                document.getElementById('la-nm-legend-curr-label').innerText = 'L' + pLabel + ' (current)';
+                document.getElementById('la-nm-legend-curr-color').style.background = pColor;
+            }
+        } else {
+            if (legendEl) {
+                legendEl.style.display = 'none';
+            }
         }
     }
 
