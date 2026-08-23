@@ -3309,17 +3309,16 @@
                     </div>
 
                     <div style="background:#f1f5f9; padding:1rem; border-radius:4px; border:1px solid #cbd5e1; margin-bottom:1rem;">
-                        <h4 style="margin-top:0; color:#334155; font-size:0.9rem;">Mode</h4>
-                        <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; cursor:pointer;">
-                            <input type="radio" name="eigen-mode" value="filings" checked> Iron Filings (Power Iteration)
-                        </label>
-                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                            <input type="radio" name="eigen-mode" value="single"> Single Vector Trace
-                        </label>
+                        <h4 style="margin-top:0; color:#334155; font-size:0.9rem;">Transformation Progress (t)</h4>
+                        <input type="range" id="la-eigen-t" min="0" max="1" step="0.01" value="0" style="width:100%; margin-bottom:0.5rem;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; font-weight:bold;">
+                            <span>Identity I</span>
+                            <span>Matrix A</span>
+                        </div>
                     </div>
                     
-                    <button class="btn" id="la-eigen-btn-play" style="width:100%; background:#22c55e; margin-bottom:0.5rem;">&#9658; Apply Transformation</button>
-                    <button class="btn" id="la-eigen-btn-reset" style="width:100%; background:#64748b;">Reset to Unit Circle</button>
+                    <button class="btn" id="la-eigen-btn-play" style="width:100%; background:#22c55e; margin-bottom:0.5rem;">&#9658; Animate Morph</button>
+                    <button class="btn" id="la-eigen-btn-reset" style="width:100%; background:#64748b;">Reset Grid</button>
 
                     <div style="background:#e0f2fe; padding:1rem; margin-top:1rem; border-radius:4px; border:1px solid #7dd3fc;">
                         <div style="font-size:0.9rem; font-weight:bold; color:#0369a1; margin-bottom:0.5rem;">Computed Eigenvalues</div>
@@ -3331,15 +3330,10 @@
                 
                 <!-- Visualizer (Right) -->
                 <div style="flex: 3; display:flex; flex-direction:column; gap:1rem; min-width:400px;">
-                    <!-- 3D Canvas (Top) -->
-                    <div class="sim-canvas-wrap" style="flex: 1; padding:0; background:#fff; position:relative; min-height:450px;">
+                    <!-- 3D Canvas -->
+                    <div class="sim-canvas-wrap" style="flex: 1; padding:0; background:#fff; position:relative; min-height:500px;">
                         <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Vector Transformation Space</div>
-                        <div id="la-eigen-canvas" style="width:100%; height:100%; min-height:450px;"></div>
-                    </div>
-                    <!-- Oscilloscope Chart (Bottom) -->
-                    <div class="sim-canvas-wrap" style="height: 200px; padding:0; background:#fff; position:relative; border-top:none; overflow:hidden;">
-                        <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Angular Deviation Oscilloscope &Delta;&theta;</div>
-                        <canvas id="la-eigen-chart" width="800" height="200" style="width:100%; height:100%; display:block;"></canvas>
+                        <div id="la-eigen-canvas" style="width:100%; height:100%; min-height:500px;"></div>
                     </div>
                 </div>
             </div>
@@ -3349,15 +3343,13 @@
                 
                 <div style="display:flex; gap:2rem; flex-wrap:wrap; margin-top:1rem;">
                     <div style="flex:1; min-width:300px; border-left:4px solid #64748b; padding-left:1rem;">
-                        <h5 style="color:#334155;">The Oscilloscope (Zero-Crossing)</h5>
-                        <p>Most vectors rotate when transformed by a matrix. The oscilloscope chart below the main viewer plots the angle of deviation ($\Delta\theta$) between a vector $v$ and its transformed version $Av$, as we sweep around the unit circle from $0^\circ$ to $360^\circ$.</p>
-                        <p>An <b>eigenvector</b> is a special direction where the vector <i>does not rotate</i>. On the oscilloscope, this is exactly where the deviation curve crosses the zero line (or the $\pm 180^\circ$ line for negative eigenvalues).</p>
+                        <h5 style="color:#334155;">Linear Transformations</h5>
+                        <p>When we apply a matrix $A$ to a grid, the entire space stretches, squishes, and rotates. Most vectors are knocked off their original span (they change direction).</p>
                     </div>
                     <div style="flex:1; min-width:300px; border-left:4px solid #64748b; padding-left:1rem;">
-                        <h5 style="color:#334155;">Power Iteration (Iron Filings)</h5>
-                        <p>If you repeatedly apply the same matrix transformation to a set of vectors ($A(A(Av))$), they will progressively align with the <b>dominant eigenvector</b> (the one with the largest absolute eigenvalue).</p>
-                        <div class="eq-block result" style="margin: 0.5rem 0; padding: 0.5rem; font-size:1rem;">$$ v_{k+1} = \frac{A v_k}{||A v_k||} $$</div>
-                        <p>This "swarming" behavior is the geometric intuition behind the Power Iteration algorithm, the primary numerical method used by computers to find eigenvalues in large systems.</p>
+                        <h5 style="color:#334155;">The Eigenvectors</h5>
+                        <p>An <b>eigenvector</b> is a special vector that <i>does not rotate</i> during this transformation. It stays perfectly on its original line, only stretching or shrinking by a scalar factor known as the <b>eigenvalue</b> $\lambda$.</p>
+                        <div class="eq-block result" style="margin: 0.5rem 0; padding: 0.5rem; font-size:1rem;">$$ A \vec{v} = \lambda \vec{v} $$</div>
                     </div>
                 </div>
             </div>
@@ -3366,13 +3358,13 @@
 </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="linear_algebra.js?v=31"></script>
-    <script src="la_rowcol.js?v=31"></script>
-    <script src="la_nullspace.js?v=31"></script>
-    <script src="la_orthogonality.js?v=31"></script>
-    <script src="la_axb.js?v=31"></script>
-    <script src="la_eigen.js?v=31"></script>
-    <script src="app.js?v=31"></script>
+    <script src="linear_algebra.js?v=32"></script>
+    <script src="la_rowcol.js?v=32"></script>
+    <script src="la_nullspace.js?v=32"></script>
+    <script src="la_orthogonality.js?v=32"></script>
+    <script src="la_axb.js?v=32"></script>
+    <script src="la_eigen.js?v=32"></script>
+    <script src="app.js?v=32"></script>
     <script src="practice_1.js"></script>
     <script src="practice_2.js"></script>
     <script src="vibrations.js"></script>

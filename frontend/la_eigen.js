@@ -1,4 +1,4 @@
-/* la_eigen.js - Eigenvectors and Eigenvalues */
+/* la_eigen.js - Simplified Grid Transformation Morph */
 window.laEigenInitialized = false;
 
 window.initLAEigen = function () {
@@ -9,22 +9,15 @@ window.initLAEigen = function () {
     window.laEigenInitialized = true;
 
     let renderer, scene, camera, controls;
-    let particlesGroup, linesGroup, ghostGroup;
+    let transformGroup;
+    let eigenLinesGroup; // Keep eigen lines inside transformGroup so they stretch, but maybe we want to redraw them to keep their thickness uniform? Actually, keeping them inside transformGroup is exactly what we want! They will stretch/shrink naturally. But wait, if they are lines, their thickness won't change in ThreeJS (linewidth is constant in screen space for LineBasicMaterial). This is perfect!
+    
     const canvasWrap = document.getElementById('la-eigen-canvas');
     if (!canvasWrap) return;
     
-    const chartCanvas = document.getElementById('la-eigen-chart');
-    const ctx = chartCanvas.getContext('2d');
-
     // State
     let isAnimating = false;
-    let isSingleMode = false;
-    let currentIteration = 0;
-    
-    // Data structures
-    const numParticles = 200;
-    let particles = []; // array of THREE.Vector3
-    let singleVector = new THREE.Vector3(1, 0, 0);
+    let animTime = parseFloat(document.getElementById('la-eigen-t').value);
     
     function init3D() {
         if (renderer) return;
@@ -34,26 +27,61 @@ window.initLAEigen = function () {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0xffffff);
         
-        // Use Orthographic or Perspective? Let's use Perspective but looking straight down Z
-        camera = new THREE.PerspectiveCamera(45, canvasWrap.clientWidth / canvasWrap.clientHeight, 0.1, 100);
-        camera.position.set(0, 0, 8);
+        // Orthographic is better for 2D transformations to avoid perspective distortion
+        const aspect = canvasWrap.clientWidth / canvasWrap.clientHeight;
+        const d = 5;
+        camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 100);
+        camera.position.set(0, 0, 10);
         controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableRotate = false; // Lock rotation
         controls.enableDamping = true;
-        controls.enableRotate = false; // Lock to 2D plane for clearer viewing
         
         scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-        scene.add(new THREE.AxesHelper(5));
         
-        // Unit circle
-        const circleGeom = new THREE.RingGeometry(0.98, 1.02, 64);
-        const circleMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, side: THREE.DoubleSide });
-        scene.add(new THREE.Mesh(circleGeom, circleMat));
+        // Background fixed axes (faint)
+        scene.add(new THREE.AxesHelper(10));
 
-        linesGroup = new THREE.Group(); scene.add(linesGroup);
-        particlesGroup = new THREE.Group(); scene.add(particlesGroup);
-        ghostGroup = new THREE.Group(); scene.add(ghostGroup);
+        transformGroup = new THREE.Group();
+        transformGroup.matrixAutoUpdate = false;
+        scene.add(transformGroup);
+        
+        buildGrid();
+        buildSampleVectors();
+        
+        eigenLinesGroup = new THREE.Group();
+        transformGroup.add(eigenLinesGroup);
 
         animate();
+    }
+    
+    function buildGrid() {
+        const size = 10;
+        const step = 1;
+        const geom = new THREE.BufferGeometry();
+        const pts = [];
+        for (let i = -size; i <= size; i += step) {
+            pts.push(new THREE.Vector3(-size, i, 0), new THREE.Vector3(size, i, 0));
+            pts.push(new THREE.Vector3(i, -size, 0), new THREE.Vector3(i, size, 0));
+        }
+        geom.setFromPoints(pts);
+        const mat = new THREE.LineBasicMaterial({ color: 0xcbd5e1, transparent:true, opacity: 0.5 });
+        const grid = new THREE.LineSegments(geom, mat);
+        transformGroup.add(grid);
+    }
+    
+    function buildSampleVectors() {
+        const numVecs = 8;
+        for (let i = 0; i < numVecs; i++) {
+            const theta = (i / numVecs) * Math.PI * 2;
+            const dir = new THREE.Vector3(Math.cos(theta), Math.sin(theta), 0);
+            const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(), 1.5, 0x3b82f6, 0.2, 0.15);
+            transformGroup.add(arrow);
+        }
+        
+        // A single circle outline to see the shear clearly
+        const circleGeom = new THREE.RingGeometry(1.48, 1.52, 64);
+        const circleMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8, side: THREE.DoubleSide });
+        transformGroup.add(new THREE.Mesh(circleGeom, circleMat));
     }
 
     function getMatrix() {
@@ -89,106 +117,6 @@ window.initLAEigen = function () {
         }
         return { vals, vecs };
     }
-    
-    function resetParticles() {
-        particles = [];
-        while(particlesGroup.children.length > 0) particlesGroup.remove(particlesGroup.children[0]);
-        while(ghostGroup.children.length > 0) ghostGroup.remove(ghostGroup.children[0]);
-        
-        for (let i = 0; i < numParticles; i++) {
-            const theta = (i / numParticles) * Math.PI * 2;
-            let v = new THREE.Vector3(Math.cos(theta), Math.sin(theta), 0);
-            particles.push(v.clone());
-            
-            const arrow = new THREE.ArrowHelper(v, new THREE.Vector3(), 1.0, 0x94a3b8, 0.1, 0.08);
-            particlesGroup.add(arrow);
-        }
-        
-        singleVector = new THREE.Vector3(1, 0, 0); // Start at X axis
-        const arrow = new THREE.ArrowHelper(singleVector, new THREE.Vector3(), 1.0, 0xef4444, 0.15, 0.12);
-        ghostGroup.add(arrow);
-        
-        currentIteration = 0;
-        isAnimating = false;
-    }
-    
-    function drawChart(A) {
-        // Resize canvas for sharp rendering
-        const rect = chartCanvas.parentElement.getBoundingClientRect();
-        chartCanvas.width = rect.width;
-        chartCanvas.height = 200;
-        const w = chartCanvas.width;
-        const h = chartCanvas.height;
-        
-        ctx.clearRect(0, 0, w, h);
-        
-        // Grid lines
-        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
-        ctx.beginPath();
-        // y = 0 line
-        ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
-        // y = +/- pi lines
-        ctx.moveTo(0, h*0.1); ctx.lineTo(w, h*0.1); // +180
-        ctx.moveTo(0, h*0.9); ctx.lineTo(w, h*0.9); // -180
-        ctx.stroke();
-        
-        ctx.fillStyle = '#64748b'; ctx.font = '10px sans-serif';
-        ctx.fillText('+180°', 5, h*0.1 + 12);
-        ctx.fillText('0°', 5, h/2 - 5);
-        ctx.fillText('-180°', 5, h*0.9 - 5);
-        
-        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
-        ctx.beginPath();
-        
-        let zeroCrossings = [];
-        let prevY = 0;
-        
-        for(let x=0; x<=w; x++) {
-            let theta = (x / w) * Math.PI * 2;
-            let vx = Math.cos(theta);
-            let vy = Math.sin(theta);
-            
-            // Apply A
-            let tx = A.a * vx + A.b * vy;
-            let ty = A.c * vx + A.d * vy;
-            
-            // Angle deviation: signed angle from v to Tv
-            let dev = Math.atan2(vx*ty - vy*tx, vx*tx + vy*ty); 
-            
-            let cy = h/2 - (dev / Math.PI) * (h*0.4);
-            
-            if (x === 0) ctx.moveTo(x, cy);
-            else {
-                // Don't draw lines across the wrap-around (e.g. from PI to -PI)
-                if (Math.abs(cy - prevY) > h*0.5) ctx.moveTo(x, cy);
-                else ctx.lineTo(x, cy);
-            }
-            
-            // Detect zero crossings
-            if (x > 0 && Math.abs(cy - prevY) < h*0.5) {
-                if ((prevY < h/2 && cy >= h/2) || (prevY > h/2 && cy <= h/2)) {
-                    zeroCrossings.push({x: x, type: 'pos'});
-                }
-                if ((prevY < h*0.1 && cy >= h*0.1) || (prevY > h*0.1 && cy <= h*0.1) || 
-                    (prevY < h*0.9 && cy >= h*0.9) || (prevY > h*0.9 && cy <= h*0.9)) {
-                    zeroCrossings.push({x: x, type: 'neg'});
-                }
-            }
-            
-            prevY = cy;
-        }
-        ctx.stroke();
-        
-        // Draw tick marks for eigenvectors
-        ctx.lineWidth = 2;
-        zeroCrossings.forEach(zc => {
-            ctx.strokeStyle = zc.type === 'pos' ? '#eab308' : '#f97316'; // gold for pos, orange for neg
-            ctx.beginPath();
-            ctx.moveTo(zc.x, 0);
-            ctx.lineTo(zc.x, h);
-            ctx.stroke();
-        });
-    }
 
     window.laEigenUpdate = function () {
         if (!renderer) init3D();
@@ -196,99 +124,76 @@ window.initLAEigen = function () {
         const A = getMatrix();
         const { vals, vecs } = computeEigenData(A);
         
-        let valText = "Complex (Rotation)";
+        let valText = "Complex (No Real Eigenvectors)";
         if (vals.length > 0) {
             valText = vals.map(v => `λ = ${v.toFixed(2)}`).join('<br>');
         }
         document.getElementById('la-eigen-values-readout').innerHTML = valText;
         
-        // Draw Eigenlines in 3D
-        while(linesGroup.children.length > 0) linesGroup.remove(linesGroup.children[0]);
+        // Draw True Eigenlines
+        while(eigenLinesGroup.children.length > 0) eigenLinesGroup.remove(eigenLinesGroup.children[0]);
         vecs.forEach((v, i) => {
             const lambda = vals[i];
-            const color = lambda > 0 ? 0xeab308 : 0xf97316; // gold positive, orange negative
-            const geom = new THREE.BufferGeometry().setFromPoints([v.clone().multiplyScalar(-5), v.clone().multiplyScalar(5)]);
-            const mat = new THREE.LineBasicMaterial({ color: color, linewidth: 2, transparent:true, opacity: 0.5 });
-            linesGroup.add(new THREE.Line(geom, mat));
+            const color = lambda > 0 ? 0xeab308 : 0xf97316; // gold pos, orange neg
+            
+            // Draw a long line spanning the grid
+            const geom = new THREE.BufferGeometry().setFromPoints([v.clone().multiplyScalar(-10), v.clone().multiplyScalar(10)]);
+            const mat = new THREE.LineBasicMaterial({ color: color, linewidth: 3 });
+            eigenLinesGroup.add(new THREE.Line(geom, mat));
+            
+            // Also add an arrow to show direction explicitly
+            const arrow = new THREE.ArrowHelper(v, new THREE.Vector3(), 3, color, 0.4, 0.3);
+            eigenLinesGroup.add(arrow);
+            const arrowOpp = new THREE.ArrowHelper(v.clone().negate(), new THREE.Vector3(), 3, color, 0.4, 0.3);
+            eigenLinesGroup.add(arrowOpp);
         });
         
-        drawChart(A);
-        
-        // Show/hide based on mode
-        const mode = document.querySelector('input[name="eigen-mode"]:checked').value;
-        isSingleMode = (mode === 'single');
-        particlesGroup.visible = !isSingleMode;
-        ghostGroup.visible = isSingleMode;
+        applyTransformation(animTime);
     };
     
-    function applyPowerIteration() {
+    function applyTransformation(t) {
         const A = getMatrix();
-        currentIteration++;
+        // M(t) = (1-t)I + tA
+        const m11 = (1 - t) * 1 + t * A.a;
+        const m12 = (1 - t) * 0 + t * A.b;
+        const m21 = (1 - t) * 0 + t * A.c;
+        const m22 = (1 - t) * 1 + t * A.d;
         
-        if (!isSingleMode) {
-            // Iron Filings mode
-            particles.forEach((v, i) => {
-                let tx = A.a * v.x + A.b * v.y;
-                let ty = A.c * v.x + A.d * v.y;
-                let tv = new THREE.Vector3(tx, ty, 0);
-                if (tv.length() > 0.0001) tv.normalize();
-                particles[i] = tv;
-                
-                // Update ArrowHelper
-                let arrow = particlesGroup.children[i];
-                arrow.setDirection(tv);
-                arrow.setColor(0x3b82f6); // turn blue when iter starts
-            });
-        } else {
-            // Single Vector mode
-            let tx = A.a * singleVector.x + A.b * singleVector.y;
-            let ty = A.c * singleVector.x + A.d * singleVector.y;
-            let tv = new THREE.Vector3(tx, ty, 0);
-            let len = tv.length();
-            if (len > 0.0001) tv.normalize();
-            
-            // Draw ghost of previous
-            const prevArrow = new THREE.ArrowHelper(singleVector, new THREE.Vector3(), 1.0, 0xef4444, 0.15, 0.12);
-            prevArrow.line.material.transparent = true; prevArrow.line.material.opacity = 0.3;
-            prevArrow.cone.material.transparent = true; prevArrow.cone.material.opacity = 0.3;
-            ghostGroup.add(prevArrow);
-            
-            // The newest is solid
-            // Remove previous solid
-            if (ghostGroup.children.length > 0) {
-                let last = ghostGroup.children[ghostGroup.children.length-1];
-                if (last.line.material.opacity === 1) ghostGroup.remove(last);
-            }
-            const currArrow = new THREE.ArrowHelper(tv, new THREE.Vector3(), 1.0, 0xef4444, 0.15, 0.12);
-            ghostGroup.add(currArrow);
-            
-            singleVector = tv;
-        }
+        const m = new THREE.Matrix4();
+        m.set(
+            m11, m12, 0, 0,
+            m21, m22, 0, 0,
+            0,   0,   1, 0,
+            0,   0,   0, 1
+        );
+        transformGroup.matrix.copy(m);
     }
 
     // Bind inputs
     const inputs = ['a11', 'a12', 'a21', 'a22'];
     inputs.forEach(id => {
         document.getElementById('la-eigen-'+id).addEventListener('input', () => {
-            resetParticles();
             window.laEigenUpdate();
         });
     });
     
-    document.querySelectorAll('input[name="eigen-mode"]').forEach(el => {
-        el.addEventListener('change', () => {
-            resetParticles();
-            window.laEigenUpdate();
-        });
+    document.getElementById('la-eigen-t').addEventListener('input', (e) => {
+        animTime = parseFloat(e.target.value);
+        isAnimating = false;
+        applyTransformation(animTime);
     });
 
     document.getElementById('la-eigen-btn-play').addEventListener('click', () => {
-        applyPowerIteration();
+        if (animTime >= 1) animTime = 0;
+        isAnimating = true;
     });
     
     document.getElementById('la-eigen-btn-reset').addEventListener('click', () => {
-        resetParticles();
-        window.laEigenUpdate();
+        animTime = 0;
+        isAnimating = false;
+        document.getElementById('la-eigen-t').value = 0;
+        applyTransformation(0);
+        if (controls) controls.reset();
     });
 
     function setVals(a,b,c,d) {
@@ -296,7 +201,6 @@ window.initLAEigen = function () {
         document.getElementById('la-eigen-a12').value = b;
         document.getElementById('la-eigen-a21').value = c;
         document.getElementById('la-eigen-a22').value = d;
-        resetParticles();
         window.laEigenUpdate();
     }
 
@@ -306,24 +210,34 @@ window.initLAEigen = function () {
 
     function animate() {
         requestAnimationFrame(animate);
+        
+        if (isAnimating) {
+            animTime += 0.005;
+            if (animTime >= 1) {
+                animTime = 1;
+                isAnimating = false;
+            }
+            document.getElementById('la-eigen-t').value = animTime;
+            applyTransformation(animTime);
+        }
+        
         if (controls) controls.update();
         if (renderer && scene && camera) renderer.render(scene, camera);
     }
 
     setTimeout(() => {
         if (!renderer) init3D();
-        resetParticles();
         window.laEigenUpdate();
-        
-        // Window resize handler for the chart
-        window.addEventListener('resize', () => {
-            if (chartCanvas) drawChart(getMatrix());
-        });
     }, 100);
     
     window.addEventListener('resize', () => {
-        if (renderer) {
-            camera.aspect = canvasWrap.clientWidth / canvasWrap.clientHeight;
+        if (renderer && camera) {
+            const aspect = canvasWrap.clientWidth / canvasWrap.clientHeight;
+            const d = 5;
+            camera.left = -d * aspect;
+            camera.right = d * aspect;
+            camera.top = d;
+            camera.bottom = -d;
             camera.updateProjectionMatrix();
             renderer.setSize(canvasWrap.clientWidth, canvasWrap.clientHeight);
         }
