@@ -2863,14 +2863,16 @@
 
                     <div style="margin-bottom: 1.5rem;">
                         <strong>2. The Column Way (Linear Combinations)</strong>
-                        <p style="margin: 0.5rem 0;">Every column of $C$ is a linear combination of the <em>columns of $A$</em>. The weights are provided by the corresponding column of $B$.</p>
-                        <div class="eq-block result">$$ C_j = A B_j = \begin{bmatrix} | & | & & | \\ A_1 & A_2 & \cdots & A_n \\ | & | & & | \end{bmatrix} \begin{bmatrix} b_{1j} \\ b_{2j} \\ \vdots \\ b_{nj} \end{bmatrix} = b_{1j}A_1 + b_{2j}A_2 + \dots + b_{nj}A_n $$</div>
+                        <p style="margin: 0.5rem 0;">Every column of $C$ is a linear combination of the <em>columns of $A$</em>. The weights are provided by the corresponding column of $B$. The full matrix $C$ is simply these column vectors placed side-by-side.</p>
+                        <div class="eq-block result">$$ \begin{bmatrix} | & | & & | \\ C_1 & C_2 & \cdots & C_p \\ | & | & & | \end{bmatrix} = A \begin{bmatrix} | & | & & | \\ B_1 & B_2 & \cdots & B_p \\ | & | & & | \end{bmatrix} = \begin{bmatrix} | & | & & | \\ AB_1 & AB_2 & \cdots & AB_p \\ | & | & & | \end{bmatrix} $$</div>
+                        <div class="eq-block result">$$ \text{where each } C_j = A B_j = b_{1j}A_1 + b_{2j}A_2 + \dots + b_{nj}A_n $$</div>
                     </div>
 
                     <div style="margin-bottom: 1.5rem;">
                         <strong>3. The Row Way</strong>
-                        <p style="margin: 0.5rem 0;">Every row of $C$ is a linear combination of the <em>rows of $B$</em>. The weights are provided by the corresponding row of $A$.</p>
-                        <div class="eq-block result">$$ C_i^* = A_i^* B = \begin{bmatrix} a_{i1} & a_{i2} & \cdots & a_{in} \end{bmatrix} \begin{bmatrix} - & B_1^* & - \\ - & B_2^* & - \\ & \vdots & \\ - & B_n^* & - \end{bmatrix} = a_{i1}B_1^* + a_{i2}B_2^* + \dots + a_{in}B_n^* $$</div>
+                        <p style="margin: 0.5rem 0;">Every row of $C$ is a linear combination of the <em>rows of $B$</em>. The weights are provided by the corresponding row of $A$. The full matrix $C$ is simply these row vectors stacked vertically.</p>
+                        <div class="eq-block result">$$ \begin{bmatrix} - & C_1^* & - \\ - & C_2^* & - \\ & \vdots & \\ - & C_m^* & - \end{bmatrix} = \begin{bmatrix} - & A_1^* & - \\ - & A_2^* & - \\ & \vdots & \\ - & A_m^* & - \end{bmatrix} B = \begin{bmatrix} - & A_1^* B & - \\ - & A_2^* B & - \\ & \vdots & \\ - & A_m^* B & - \end{bmatrix} $$</div>
+                        <div class="eq-block result">$$ \text{where each } C_i^* = A_i^* B = a_{i1}B_1^* + a_{i2}B_2^* + \dots + a_{in}B_n^* $$</div>
                     </div>
 
                     <div style="margin-bottom: 1.5rem;">
