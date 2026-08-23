@@ -2603,6 +2603,20 @@
                     <canvas id="la-v-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
                 </div>
             </div>
+        
+                <div class="theory-pane active" style="margin-top: 2rem;">
+                    <h4>Mathematics Behind Vectors</h4>
+                    <p>A vector in an $n$-dimensional Euclidean space $\mathbb{R}^n$ is an ordered tuple of $n$ real numbers. We can define fundamental algebraic operations on vectors:</p>
+                    <ul>
+                        <li><strong>Vector Addition:</strong> Vectors are added component-wise. If $u = \langle u_1, u_2 \rangle$ and $v = \langle v_1, v_2 \rangle$, then:
+                            <div class="eq-block result">$$ u + v = \langle u_1 + v_1, u_2 + v_2 \rangle $$</div>
+                        </li>
+                        <li><strong>Scalar Multiplication:</strong> Scaling a vector by a real number $\alpha$ scales each component:
+                            <div class="eq-block result">$$ \alpha u = \langle \alpha u_1, \alpha u_2 \rangle $$</div>
+                        </li>
+                    </ul>
+                    <p>Geometrically, addition is performed by placing the tail of $v$ at the head of $u$. Scalar multiplication stretches or shrinks the vector while preserving its direction (or reversing it if $\alpha < 0$). These two operations form the axiomatic foundation of all vector spaces.</p>
+                </div>
         </section>
 
         <!-- ================= LA 2: LINEAR COMBINATIONS ================= -->
@@ -2710,6 +2724,13 @@
                     <div id="la-lc-3d-container" style="width:100%; height:480px; display:none;"></div>
                 </div>
             </div>
+        
+                <div class="theory-pane active" style="margin-top: 2rem;">
+                    <h4>Mathematics of Linear Combinations</h4>
+                    <p>Given a set of vectors $\{v_1, v_2, \dots, v_k\}$ and a set of scalar weights $\{c_1, c_2, \dots, c_k\}$, a <strong>linear combination</strong> is formed by scaling each vector and adding them together:</p>
+                    <div class="eq-block result">$$ v = c_1v_1 + c_2v_2 + \dots + c_kv_k $$</div>
+                    <p>The set of <em>all possible</em> linear combinations of a set of vectors is called their <strong>Span</strong>. If you have two vectors in $\mathbb{R}^2$ that are not collinear (linearly independent), their span is the entire 2D plane. If they <em>are</em> collinear, their span is just a 1D line.</p>
+                </div>
         </section>
 
         <!-- ================= LA 3: NORMS ================= -->
@@ -2732,6 +2753,18 @@
                     <canvas id="la-nm-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
                 </div>
             </div>
+        
+                <div class="theory-pane active" style="margin-top: 2rem;">
+                    <h4>Mathematics of Vector Norms</h4>
+                    <p>A norm is a mathematical function that assigns a strictly positive length or size to each vector. The most general formulation is the <strong>$L_p$ norm</strong> (or Minkowski distance):</p>
+                    <div class="eq-block result">$$ \|x\|_p = \left( \sum_{i=1}^n |x_i|^p \right)^{1/p} $$</div>
+                    <p>By changing the value of $p$, we change how distance is measured:</p>
+                    <ul>
+                        <li><strong>$p=1$ (Manhattan Norm):</strong> Distance is the sum of absolute differences. The unit "ball" is a diamond.</li>
+                        <li><strong>$p=2$ (Euclidean Norm):</strong> The standard shortest-path distance. The unit "ball" is a perfect circle.</li>
+                        <li><strong>$p \to \infty$ (Maximum Norm):</strong> Distance is purely determined by the largest component. The unit "ball" is a square.</li>
+                    </ul>
+                </div>
         </section>
 
         <!-- ================= LA 4: TRANSFORMS ================= -->
@@ -2763,6 +2796,15 @@
                     <canvas id="la-tr-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
                 </div>
             </div>
+        
+                <div class="theory-pane active" style="margin-top: 2rem;">
+                    <h4>Mathematics of Linear Transformations</h4>
+                    <p>A function $T$ is a linear transformation if it preserves vector addition and scalar multiplication:</p>
+                    <div class="eq-block result">$$ T(u+v) = T(u) + T(v) \quad \text{and} \quad T(cu) = cT(u) $$</div>
+                    <p>Every linear transformation can be represented by a matrix $A$. The <em>columns</em> of $A$ tell us exactly where the basis vectors (typically $\hat{i}$ and $\hat{j}$) end up after the transformation.</p>
+                    <div class="eq-block result">$$ T\left(\begin{bmatrix} x \\ y \end{bmatrix}\right) = x \underbrace{\begin{bmatrix} a \\ c \end{bmatrix}}_{T(\hat{i})} + y \underbrace{\begin{bmatrix} b \\ d \end{bmatrix}}_{T(\hat{j})} = \begin{bmatrix} a & b \\ c & d \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} $$</div>
+                    <p>Because the grid lines remain parallel and evenly spaced, knowing where the basis vectors land gives you enough information to deduce where every other point in the entire space lands.</p>
+                </div>
         </section>
 
         <!-- ================= LA 5: MULTIPLY ================= -->
@@ -2802,6 +2844,14 @@
                     <canvas id="la-mul-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
                 </div>
             </div>
+        
+                <div class="theory-pane active" style="margin-top: 2rem;">
+                    <h4>Mathematics of Matrix Multiplication</h4>
+                    <p>Matrix multiplication is not just an arbitrary arrangement of dot products; it is the mathematical equivalent of <strong>composing linear transformations</strong>. Computing $C = AB$ means applying transformation $B$ first, and then applying transformation $A$.</p>
+                    <p>Algebraically, the element in the $i$-th row and $j$-th column of the resulting matrix $C$ is the dot product of the $i$-th row of $A$ and the $j$-th column of $B$:</p>
+                    <div class="eq-block result">$$ C_{ij} = \sum_{k=1}^n A_{ik} B_{kj} $$</div>
+                    <p>Because composing transformations is not necessarily commutative (rotating then shearing is different from shearing then rotating), matrix multiplication is non-commutative: $AB \neq BA$.</p>
+                </div>
         </section>
 
         <!-- ================= LA 6: DETERMINANTS ================= -->
@@ -2850,6 +2900,19 @@
                     <div id="la-det-canvas-3d" style="width:100%; height:480px; display:none;"></div>
                 </div>
             </div>
+        
+                <div class="theory-pane active" style="margin-top: 2rem;">
+                    <h4>Mathematics of the Determinant</h4>
+                    <p>The determinant of a matrix represents the <strong>scaling factor</strong> of the linear transformation. In 2D, it describes how much the area of a region increases or decreases. In 3D, it describes the change in volume.</p>
+                    <div class="eq-block result">$$ \det\left(\begin{bmatrix} a & b \\ c & d \end{bmatrix}\right) = ad - bc $$</div>
+                    <ul>
+                        <li><strong>$\det > 1$:</strong> Space is stretched outward.</li>
+                        <li><strong>$\det = 1$:</strong> Area is preserved (e.g., pure rotations or shears).</li>
+                        <li><strong>$0 < \det < 1$:</strong> Space is squished inward.</li>
+                        <li><strong>$\det < 0$:</strong> Space is inverted (like a mirror reflection).</li>
+                        <li><strong>$\det = 0$:</strong> The transformation crushes the space into a lower dimension (e.g., a line or a point), completely destroying the area.</li>
+                    </ul>
+                </div>
         </section>
 
         <!-- ================= LA 7: INVERSE MATRICES ================= -->
@@ -2883,6 +2946,15 @@
                     <canvas id="la-inv-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
                 </div>
             </div>
+        
+                <div class="theory-pane active" style="margin-top: 2rem;">
+                    <h4>Mathematics of the Inverse Matrix</h4>
+                    <p>The inverse of a matrix $A$, denoted $A^{-1}$, is the unique matrix that perfectly undoes the transformation applied by $A$, returning space back to its original state (the Identity matrix $I$).</p>
+                    <div class="eq-block result">$$ A^{-1} A = A A^{-1} = I = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} $$</div>
+                    <p>For a $2 \times 2$ matrix, the formula is:</p>
+                    <div class="eq-block result">$$ A^{-1} = \frac{1}{\det(A)} \begin{bmatrix} d & -b \\ -c & a \end{bmatrix} $$</div>
+                    <p>Notice the $1/\det(A)$ term. If $\det(A) = 0$, the transformation has crushed space into a lower dimension. Because multiple distinct points get crushed onto the same single point, it is impossible to know where they originally came from. Information is destroyed, meaning the inverse <strong>does not exist</strong>.</p>
+                </div>
         </section>
 
 </main>
