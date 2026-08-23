@@ -97,7 +97,8 @@ function buildIndexPages() {
         { id: 'la-nullspace',  title: 'Null Space',              desc: 'Visualize vectors that vanish. Watch lines and planes collapse directly into the origin under a transformation.' },
         { id: 'la-orthogonality', title: 'Orthogonal Subspaces', desc: 'See all Four Fundamental Subspaces in one scene and verify that the Row Space and Null Space are perfectly orthogonal.' },
         { id: 'la-axb',        title: 'Solving Ax = b',          desc: 'Visualize the two fundamental ways to look at linear systems: intersecting hyperplanes (row picture) vs. a linear combination of columns (column picture).' },
-        { id: 'la-eigen',      title: 'Eigenvectors',            desc: 'Watch iron filings align to magnetic eigen-lines. Use the built-in oscilloscope to detect zero-crossing directions of non-rotation.' }
+        { id: 'la-eigen',      title: 'Eigenvectors',            desc: 'Watch iron filings align to magnetic eigen-lines. Use the built-in oscilloscope to detect zero-crossing directions of non-rotation.' },
+        { id: 'la-complex',    title: 'Complex Eigenvalues',     desc: 'Understand why complex eigenvalues are necessary for stability by balancing a physical inverted pendulum.' }
     ];
     const linalgList = document.getElementById('linalg-index-list');
     if (linalgList) linalgList.innerHTML = linalgTopics.map(createCard).join('');
@@ -154,7 +155,8 @@ document.querySelectorAll('.nav-link').forEach(link => {
         if (link.dataset.page === 'la-nullspace') { if(window.initLinAlg) initLANullSpace(); }
         if (link.dataset.page === 'la-orthogonality') { if(window.initLinAlg) initLAOrthogonality(); }
         if (link.dataset.page === 'la-axb') { if(window.initLinAlg) initLAAxb(); }
-        if (link.dataset.page === 'la-eigen') { if(window.initLinAlg) initLAEigen(); }
+        if (link.dataset.page === 'la-eigen') { if(window.initLAEigen) initLAEigen(); }
+        if (link.dataset.page === 'la-complex') { if(window.initLAComplex) initLAComplex(); }
         if (link.dataset.page === 'linalg-index') { /* nothing to init */ }  });
 });
 
