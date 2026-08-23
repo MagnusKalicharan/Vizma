@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 5 & 6 — Open up the machine | Cauchy Stress Tensor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#0b0e1a;--bg2:#111528;
+            --text:#e8ecf4;--dim:#6b7394;--accent:#64d2ff;
+            --red:#ff6b6b;--green:#69db7c;--blue:#74c0fc;
+            --yellow:#ffd43b;--orange:#ff922b;
+        }
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;width:100vw}
+        #scene{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+
+        /* ── Cinematic letterbox bars ── */
+        .letterbox{position:fixed;left:0;right:0;height:60px;background:#000;z-index:5;pointer-events:none}
+        .letterbox.top{top:0}
+        .letterbox.bottom{bottom:0}
+
+        /* ── Overlays ── */
+        .overlay{position:fixed;z-index:10;pointer-events:none}
+
+        /* Scene label — top-left */
+        .scene-label{
+            top:74px;left:40px;
+            font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+            color:var(--dim);opacity:1;
+        }
+        .scene-label span{color:var(--accent)}
+
+        /* Flying Matrix */
+        #matrix-wrapper {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 15;
+        }
+        .f-num {
+            position: absolute;
+            font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 600;
+            color: var(--text); padding: 8px 12px;
+            transform: translate(-50%, -50%);
+            opacity: 0; transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            border-radius: 6px;
+        }
+        .f-num.visible { opacity: 1; }
+        .grid-pos.r0.c0 { left: calc(70% - 90px); top: calc(50% - 40px); transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r0.c1 { left: 70%; top: calc(50% - 40px); transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r0.c2 { left: calc(70% + 90px); top: calc(50% - 40px); transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r1.c0 { left: calc(70% - 90px); top: 50%; transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r1.c1 { left: 70%; top: 50%; transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r1.c2 { left: calc(70% + 90px); top: 50%; transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r2.c0 { left: calc(70% - 90px); top: calc(50% + 40px); transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r2.c1 { left: 70%; top: calc(50% + 40px); transform: translate(-50%, -50%) scale(1); }
+        .grid-pos.r2.c2 { left: calc(70% + 90px); top: calc(50% + 40px); transform: translate(-50%, -50%) scale(1); }
+        
+        /* Highlight colors for matrix elements */
+        .f-num.glow-red { background: rgba(255,107,107,0.15); box-shadow: 0 0 20px rgba(255,107,107,0.2); border: 1px solid rgba(255,107,107,0.4); color: var(--red); }
+        .f-num.glow-green { background: rgba(105,219,124,0.15); box-shadow: 0 0 20px rgba(105,219,124,0.2); border: 1px solid rgba(105,219,124,0.4); color: var(--green); }
+        .f-num.glow-blue { background: rgba(116,192,252,0.15); box-shadow: 0 0 20px rgba(116,192,252,0.2); border: 1px solid rgba(116,192,252,0.4); color: var(--blue); }
+        
+        .bracket {
+            position: absolute; top: 50%; width: 10px; height: 160px;
+            border: 4px solid var(--dim); border-radius: 4px;
+            opacity: 0; transition: all 0.8s ease;
+            transform: translateY(-50%);
+        }
+        .left-bracket { left: calc(70% - 150px); border-right: none; }
+        .right-bracket { left: calc(70% + 140px); border-left: none; }
+        .bracket.visible { opacity: 1; }
+
+        /* Annotations */
+        .annotation {
+            position: fixed;
+            font-size: 14px; font-weight: 500;
+            color: var(--text);
+            background: rgba(11,14,26,0.8);
+            padding: 8px 16px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            opacity: 0; transition: opacity 0.4s ease;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+        }
+        .annotation.visible { opacity: 1; }
+        
+        .pointer-line {
+            position: fixed;
+            height: 2px;
+            background: rgba(255,255,255,0.5);
+            transform-origin: left center;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        .pointer-line.visible { opacity: 1; }
+
+        /* Cinematic Text */
+        .cinetext {
+            position: fixed; left: 80px; top: 50%; transform: translateY(-50%);
+            font-size: 32px; font-weight: 600; max-width: 450px;
+            opacity: 0; transition: opacity 0.5s ease;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+        .cinetext.visible { opacity: 1; }
+        .cinetext .sub { display: block; font-size: 16px; font-weight: 400; color: var(--dim); margin-top: 8px; line-height: 1.4; }
+
+        /* Timeline scrubber */
+        .timeline{
+            position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;
+            display:flex;align-items:center;gap:12px;
+            padding:8px 16px;
+            background:rgba(11,14,26,0.9);border:1px solid rgba(255,255,255,0.06);
+            border-radius:999px;
+            pointer-events: auto;
+        }
+        .tl-time{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);min-width:40px;text-align:center}
+        .tl-bar{width:min(500px,60vw);height:3px;border-radius:2px;background:rgba(255,255,255,0.08);cursor:pointer;position:relative}
+        .tl-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#a78bfa);width:0%}
+        .tl-btn{
+            width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+            background:transparent;color:var(--text);cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            font-size:11px;transition:all 0.2s ease;
+        }
+        .tl-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+    </style>
+</head>
+<body>
+
+<div id="scene"></div>
+
+<div class="letterbox top"></div>
+<div class="letterbox bottom"></div>
+
+<div class="overlay scene-label" id="scene-label">Scene 05 & 06 · <span>Open up the machine</span></div>
+
+<!-- Floating Matrix Elements -->
+<div id="matrix-wrapper" class="overlay">
+    <div class="bracket left-bracket" id="b-left"></div>
+    <div class="bracket right-bracket" id="b-right"></div>
+    <div class="f-num" id="f00">-1.25</div><div class="f-num" id="f01">-0.47</div><div class="f-num" id="f02">0.00</div>
+    <div class="f-num" id="f10">-0.47</div><div class="f-num" id="f11">-0.75</div><div class="f-num" id="f12">0.00</div>
+    <div class="f-num" id="f20">0.00</div><div class="f-num" id="f21">0.00</div><div class="f-num" id="f22">0.50</div>
+</div>
+
+<!-- New Narrative Overlays -->
+<div class="overlay cinetext" id="txt-macro">External Forces<br><span class="sub">The giant block is squished by forces on the outside.</span></div>
+<div class="overlay cinetext" id="txt-micro">The Infinitesimal Point<br><span class="sub">We zoom into a single microscopic point to measure the internal stress.</span></div>
+<div class="overlay cinetext" id="txt-val">Internal Stress<br><span class="sub">The external press plates caused this internal stress state inside our target element!</span></div>
+<div class="overlay cinetext" id="txt-intro">Zooming into a single point...<br><span class="sub">We model this point as an infinitesimally small 3D element.</span></div>
+<div class="overlay cinetext" id="txt-row1">The Right Face (X-Axis)<br><span class="sub">Notice the magnitudes of the 3 forces pushing on this face.</span></div>
+<div class="overlay cinetext" id="txt-row2">The Top Face (Y-Axis)<br><span class="sub">And the 3 forces pushing on the top face.</span></div>
+<div class="overlay cinetext" id="txt-row3">The Front Face (Z-Axis)<br><span class="sub">And the final force pulling on the front face.</span></div>
+<div class="overlay cinetext" id="txt-fly">The Stress Tensor Matrix<br><span class="sub gold">The mathematical matrix is literally just these physical arrows organized into a grid.</span></div>
+<div class="overlay cinetext" id="txt-read">The Connection<br><span class="sub" style="color:var(--accent)">Row = Which physical face is being pushed<br>Column = Which direction the force points</span></div>
+
+<!-- Annotations for Scene 6 -->
+<div class="overlay annotation" id="ann-face">Which face I cut</div>
+<div class="overlay pointer-line" id="line-face"></div>
+<div class="overlay annotation" id="ann-dir">Which way it pushed</div>
+<div class="overlay pointer-line" id="line-dir"></div>
+
+<div class="timeline">
+    <button class="tl-btn" id="btn-play">▶</button>
+    <button class="tl-btn" id="btn-reset">⟲</button>
+    <button class="tl-btn" id="btn-reset">⟲</button>
+    <span class="tl-time" id="tl-cur">0:00</span>
+    <div class="tl-bar" id="tl-bar"><div class="tl-fill" id="tl-fill"></div></div>
+    <span class="tl-time" id="tl-tot">0:55</span>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+// ═══════════════ CONSTANTS ═══════════════
+const DURATION = 55; // Extended for slower pace
+const SIGMA = [
+    [-1.25, -0.47, 0.0],
+    [-0.47, -0.75, 0.0],
+    [0.0, 0.0, 0.5]
+];
+
+// ═══════════════ STATE ═══════════════
+let currentTime = 0;
+let isPlaying = true;
+let lastTS = 0;
+
+// ═══════════════ RENDERER ═══════════════
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0e1a);
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(4, 3, 5);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.04;
+controls.target.set(0, 0, 0);
+controls.enabled = false;
+
+// ═══════════════ LIGHTING ═══════════════
+const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+dirLight.position.set(5, 10, 7);
+scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0xaaccff, 0.5);
+fillLight.position.set(-5, 0, -5);
+scene.add(fillLight);
+
+// ═══════════════ MACRO JELLY BLOCK ═══════════════
+const macroGroup = new THREE.Group();
+scene.add(macroGroup);
+
+// Exact Scene 1 deformed state
+const squeeze = 1.0;
+const compressX = 1 - squeeze * 0.45;
+const bulgeYZ = 1 + squeeze * 0.35;
+const deformedMat = new THREE.Matrix4().makeScale(compressX, bulgeYZ, bulgeYZ);
+const shearMat = new THREE.Matrix4();
+shearMat.set(
+    1, -0.47 * squeeze * 0.5 / bulgeYZ, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+);
+deformedMat.premultiply(shearMat);
+
+// The solid whole block
+const solidGeo = new RoundedBoxGeometry(2, 2, 2, 6, 0.25);
+const jellyMat = new THREE.MeshPhysicalMaterial({
+    color: 0x88dddd, roughness: 0.15, metalness: 0.0,
+    clearcoat: 1.0, clearcoatRoughness: 0.05,
+    transparent: true, opacity: 0.7, depthWrite: false
+});
+const solidMesh = new THREE.Mesh(solidGeo, jellyMat);
+solidMesh.matrixAutoUpdate = false;
+solidMesh.matrix.copy(deformedMat);
+macroGroup.add(solidMesh);
+
+// ═══════════════ VICE PLATES (Scene 1) ═══════════════
+const plateGeo = new THREE.BoxGeometry(0.12, 2.6, 2.6);
+const plateMat = new THREE.MeshPhysicalMaterial({
+    color: 0x8899aa, roughness: 0.1, metalness: 0.2,
+    transmission: 0.9, thickness: 0.12, transparent: true
+});
+const plateL = new THREE.Mesh(plateGeo, plateMat);
+plateL.position.set(-1.1, 0, 0);
+const plateR = new THREE.Mesh(plateGeo, plateMat.clone());
+plateR.position.set(1.1, 0, 0);
+macroGroup.add(plateL);
+macroGroup.add(plateR);
+
+// Force arrows
+function makeScene1Arrow(color) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+        color: color, emissive: color, emissiveIntensity: 0.5,
+        roughness: 0.2, metalness: 0.4, transparent: true, depthTest: false
+    });
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1, 32), mat);
+    shaft.position.y = 0.5;
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 32), mat);
+    head.position.y = 1.0;
+    group.add(shaft); group.add(head);
+    return group;
+}
+const forceLeft = makeScene1Arrow(0xff4444);
+forceLeft.position.set(-1.7, 0, 0);
+forceLeft.rotation.z = -Math.PI / 2; // point right
+macroGroup.add(forceLeft);
+
+const forceRight = makeScene1Arrow(0xff4444);
+forceRight.position.set(1.7, 0, 0);
+forceRight.rotation.z = Math.PI / 2; // point left
+macroGroup.add(forceRight);
+
+// The grid of tiny blocks
+const gridGroup = new THREE.Group();
+gridGroup.matrixAutoUpdate = false;
+gridGroup.matrix.copy(deformedMat);
+gridGroup.visible = false;
+macroGroup.add(gridGroup);
+
+const miniGeo = new RoundedBoxGeometry(0.38, 0.38, 0.38, 4, 0.04);
+const miniMeshes = [];
+for (let x = -2; x <= 2; x++) {
+    for (let y = -2; y <= 2; y++) {
+        for (let z = -2; z <= 2; z++) {
+            if (x===0 && y===0 && z===0) continue; // skip center
+            const mesh = new THREE.Mesh(miniGeo, jellyMat);
+            gridGroup.add(mesh);
+            miniMeshes.push({ mesh, ix: x, iy: y, iz: z });
+        }
+    }
+}
+
+// Center target cube (same material)
+const targetCube = new THREE.Mesh(miniGeo, jellyMat);
+gridGroup.add(targetCube);
+
+// We use targetCube for everything now! No more jumping to a different cube.
+const edgesGeo = new THREE.EdgesGeometry(miniGeo);
+const edgesMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+const edgesMesh = new THREE.LineSegments(edgesGeo, edgesMat);
+targetCube.add(edgesMesh);
+
+// Colored Faces (Red=+X, Green=+Y, Blue=+Z)
+function createFace(pos, rot, color) {
+    const geo = new THREE.PlaneGeometry(0.378, 0.378);
+    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...pos);
+    mesh.rotation.set(...rot);
+    targetCube.add(mesh);
+    return mesh;
+}
+const faceX = createFace([0.191, 0, 0], [0, Math.PI/2, 0], 0xff6b6b);
+const faceY = createFace([0, 0.191, 0], [-Math.PI/2, 0, 0], 0x69db7c);
+const faceZ = createFace([0, 0, 0.191], [0, 0, 0], 0x4dabf7);
+
+// ═══════════════ ARROWS ═══════════════
+function createArrow(color) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({ color: color, depthTest: false });
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1, 8), mat);
+    shaft.position.y = 0.5;
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.06, 8), mat);
+    head.position.y = 1.0;
+    group.add(shaft);
+    group.add(head);
+    // Align with +Z by default
+    group.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0), Math.PI/2);
+    group.visible = false;
+    scene.add(group);
+    return { group, shaft, head, mat };
+}
+
+// Traction arrows for each face
+const tX = createArrow(0xffffff); // Traction on X face
+const tY = createArrow(0xffffff); // Traction on Y face
+const tZ = createArrow(0xffffff); // Traction on Z face
+
+// Component arrows
+const cXX = createArrow(0xff6b6b);
+const cXY = createArrow(0x69db7c);
+const cXZ = createArrow(0x74c0fc);
+
+const cYX = createArrow(0xff6b6b);
+const cYY = createArrow(0x69db7c);
+const cYZ = createArrow(0x74c0fc);
+
+const cZX = createArrow(0xff6b6b);
+const cZY = createArrow(0x69db7c);
+const cZZ = createArrow(0x74c0fc);
+
+function updateArrow(arrowObj, origin, vector, scaleFactor) {
+    const { group, shaft, head } = arrowObj;
+    const len = vector.length() * scaleFactor;
+    if (len < 0.01) { group.visible = false; return; }
+    group.visible = true;
+    group.position.copy(origin);
+    const dir = vector.clone().normalize();
+    group.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+    shaft.scale.set(1, len, 1);
+    shaft.position.y = len / 2;
+    head.position.y = len;
+}
+
+function pinTo3D(el, arrowObj, offset, target) {
+    const pos = toScreenPosition(target, camera);
+    el.style.left = (pos.x + offset.x * 40) + 'px';
+    el.style.top = (pos.y + offset.y * 40) + 'px';
+}
+
+// ═══════════════ UI ELEMENTS ═══════════════
+const tlFill = document.getElementById('tl-fill');
+const tlCur = document.getElementById('tl-cur');
+const fNums = [
+    document.getElementById('f00'), document.getElementById('f01'), document.getElementById('f02'),
+    document.getElementById('f10'), document.getElementById('f11'), document.getElementById('f12'),
+    document.getElementById('f20'), document.getElementById('f21'), document.getElementById('f22')
+];
+const bLeft = document.getElementById('b-left');
+const bRight = document.getElementById('b-right');
+const annFace = document.getElementById('ann-face');
+const annDir = document.getElementById('ann-dir');
+const lineFace = document.getElementById('line-face');
+const lineDir = document.getElementById('line-dir');
+
+// Project 3D point to 2D screen
+function toScreenPosition(obj, camera) {
+    const vector = new THREE.Vector3();
+    obj.getWorldPosition(vector);
+    vector.project(camera);
+    vector.x = Math.round((0.5 + vector.x / 2) * (window.innerWidth / window.devicePixelRatio));
+    vector.y = Math.round((0.5 - vector.y / 2) * (window.innerHeight / window.devicePixelRatio));
+    return vector;
+}
+
+function updateAnnotationLine(lineEl, x1, y1, x2, y2) {
+    const length = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+    const angle  = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+    lineEl.style.width = length + 'px';
+    lineEl.style.left = x1 + 'px';
+    lineEl.style.top = y1 + 'px';
+    lineEl.style.transform = `rotate(${angle}deg)`;
+}
+
+// ═══════════════ ANIMATION SCRIPT ═══════════════
+const txtMacro = document.getElementById('txt-macro');
+const txtMicro = document.getElementById('txt-micro');
+const txtIntro = document.getElementById('txt-intro');
+const txtRow1 = document.getElementById('txt-row1');
+const txtRow2 = document.getElementById('txt-row2');
+const txtRow3 = document.getElementById('txt-row3');
+const txtFly = document.getElementById('txt-fly');
+const txtRead = document.getElementById('txt-read');
+
+function runTimeline(t) {
+    // Reset all UI
+    fNums.forEach(f => { 
+        f.className = 'f-num'; 
+        f.style.left = ''; f.style.top = '';
+    });
+    bLeft.classList.remove('visible');
+    bRight.classList.remove('visible');
+    
+    faceX.material.opacity = 0; faceY.material.opacity = 0; faceZ.material.opacity = 0;
+    [tX, tY, tZ, cXX, cXY, cXZ, cYX, cYY, cYZ, cZX, cZY, cZZ].forEach(a => a.group.visible = false);
+    annFace.classList.remove('visible'); annDir.classList.remove('visible');
+    lineFace.classList.remove('visible'); lineDir.classList.remove('visible');
+    
+    txtMacro.classList.remove('visible');
+    txtMicro.classList.remove('visible');
+    txtIntro.classList.remove('visible');
+    const txtVal = document.getElementById('txt-val'); txtVal.classList.remove('visible');
+    txtRow1.classList.remove('visible');
+    txtRow2.classList.remove('visible');
+    txtRow3.classList.remove('visible');
+    txtFly.classList.remove('visible');
+    txtRead.classList.remove('visible');
+
+    const s = 0.19; // Scale arrows to match 0.38 targetCube size
+    const faceXPos = new THREE.Vector3();
+    const faceYPos = new THREE.Vector3();
+    const faceZPos = new THREE.Vector3();
+    faceX.getWorldPosition(faceXPos);
+    faceY.getWorldPosition(faceYPos);
+    faceZ.getWorldPosition(faceZPos);
+
+    // --- ZOOM LOGIC (0s to 10s) ---
+    macroGroup.visible = true;
+    
+    if (t < 2) { 
+        txtMacro.classList.add('visible');
+        txtMacro.innerHTML = 'The Continuous Body<br><span class="sub">We start with a solid, continuous physical object.</span>';
+        camera.position.set(5, 3, 6);
+        camera.lookAt(0,0,0);
+        solidMesh.visible = true;
+        solidMesh.material.opacity = 0.7;
+        gridGroup.visible = false;
+        
+        const spacing = 0.4;
+        miniMeshes.forEach(m => {
+            m.mesh.position.set(m.ix * spacing, m.iy * spacing, m.iz * spacing);
+            m.mesh.material.opacity = 0.7; 
+        });
+    } 
+    else if (t >= 2 && t < 4) {
+        // CROSSFADE
+        txtMacro.classList.add('visible');
+        txtMacro.innerHTML = 'Finite Elements<br><span class="sub">We mathematically divide it into a grid of tiny elements.</span>';
+        solidMesh.visible = true;
+        gridGroup.visible = true;
+        camera.position.set(5, 3, 6);
+        camera.lookAt(0,0,0);
+        
+        const p = (t - 2) / 2.0; 
+        solidMesh.material.opacity = 0.7 - (0.7 * p);
+        
+        const spacing = 0.4 + (0.05 * p); // Subtle push apart
+        miniMeshes.forEach(m => {
+            m.mesh.position.set(m.ix * spacing, m.iy * spacing, m.iz * spacing);
+            m.mesh.material.opacity = 0.7 * p; 
+        });
+        targetCube.position.set(0,0,0);
+    }
+    else if (t >= 4 && t < 7) { 
+        // OTHER CUBES FADE OUT, CAMERA STAYS STILL
+        txtMicro.classList.add('visible');
+        txtMicro.innerHTML = 'The Target Element<br><span class="sub">We select a single tiny element deep inside for analysis.</span>';
+        solidMesh.visible = false;
+        gridGroup.visible = true;
+        camera.position.set(5, 3, 6);
+        camera.lookAt(0,0,0);
+        
+        const p = (t - 4) / 3.0;
+        const spacing = 0.45;
+        miniMeshes.forEach(m => {
+            m.mesh.position.set(m.ix * spacing, m.iy * spacing, m.iz * spacing);
+            m.mesh.material.opacity = 0.7 - (0.7 * p); // fade away smoothly
+        });
+    }
+    else if (t >= 7 && t < 10) {
+        // ZOOM IN
+        txtIntro.classList.add('visible');
+        txtIntro.innerHTML = 'Zooming into a single point...<br><span class="sub">We model this point as an infinitesimally small 3D element.</span>';
+        solidMesh.visible = false;
+        gridGroup.visible = true;
+        
+        const p = (t - 7) / 3.0; 
+        const ease = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+        
+        camera.position.set(
+            5 - (4.0 * ease), // goes to 1.0
+            3 - (2.4 * ease), // goes to 0.6
+            6 - (4.8 * ease)  // goes to 1.2
+        );
+        camera.lookAt(0,0,0);
+        
+        miniMeshes.forEach(m => m.mesh.material.opacity = 0);
+    } 
+    
+    // --- MICRO WORLD LOGIC (t >= 10s) ---
+    if (t >= 10) {
+        solidMesh.visible = false;
+        gridGroup.visible = true;
+        miniMeshes.forEach(m => m.mesh.material.opacity = 0);
+        
+        const microT = t - 10;
+        
+        // Slowly orbit the camera during microscopic analysis!
+        const orbitSpeed = 0.15;
+        const radius = 1.56;
+        camera.position.set(Math.sin(microT * orbitSpeed) * radius, 0.6, Math.cos(microT * orbitSpeed) * radius);
+        camera.lookAt(0,0,0);
+
+        // DEFORMATION MATH is now purely visual via macroGroup
+        // SXX/SYY logic just drives the arrow lengths!
+        let SXX = 1, SXY = 0, SXZ = 0;
+        let SYX = 0, SYY = 1, SYZ = 0;
+        let SZX = 0, SZY = 0, SZZ = 1;
+
+        if (microT >= 5) {
+            const p1 = Math.min((microT - 5) / 3.0, 1.0);
+            SXX += SIGMA[0][0] * 0.08 * p1; 
+            SYX += SIGMA[1][0] * 0.08 * p1; 
+        }
+        if (microT >= 13) {
+            const p2 = Math.min((microT - 13) / 3.0, 1.0);
+            SYY += SIGMA[1][1] * 0.08 * p2; 
+            SXY += SIGMA[0][1] * 0.08 * p2; 
+        }
+        if (microT >= 21) {
+            const p3 = Math.min((microT - 21) / 3.0, 1.0);
+            SZZ += SIGMA[2][2] * 0.08 * p3; 
+        }
+        
+        // Phase 1: Intro (0-5s micro)
+        if (microT > 0 && microT < 5) {
+            const txtVal = document.getElementById('txt-val');
+            txtVal.classList.add('visible');
+            txtVal.innerHTML = 'Internal Magnitudes<br><span class="sub">These matrix numbers are the <b>measured magnitudes</b> of the internal stress caused by the press.</span>';
+        }
+
+        // Phase 2: Row 1 - Right Face (5-13s micro)
+        if (microT >= 5 && microT < 13) {
+            txtRow1.classList.add('visible');
+            faceX.material.opacity = 0.3;
+            
+            const p = Math.min((microT - 5) / 3.0, 1.0);
+            updateArrow(cXX, faceXPos, new THREE.Vector3(SIGMA[0][0]*p, 0, 0), s);
+            updateArrow(cXY, faceXPos, new THREE.Vector3(0, SIGMA[1][0]*p, 0), s);
+
+            pinTo3D(fNums[0], cXX, new THREE.Vector2(1, -1), faceX);
+            pinTo3D(fNums[1], cXY, new THREE.Vector2(1, -1), faceX);
+            pinTo3D(fNums[2], cXZ, new THREE.Vector2(1, 1), faceX);
+        }
+
+        // Phase 3: Row 2 - Top Face (13-21s micro)
+        if (microT >= 13 && microT < 21) {
+            txtRow2.classList.add('visible');
+            faceY.material.opacity = 0.3;
+            
+            const p = Math.min((microT - 13) / 3.0, 1.0);
+            updateArrow(cYX, faceYPos, new THREE.Vector3(SIGMA[0][1]*p, 0, 0), s);
+            updateArrow(cYY, faceYPos, new THREE.Vector3(0, SIGMA[1][1]*p, 0), s);
+
+            pinTo3D(fNums[3], cYX, new THREE.Vector2(1, -1), faceY);
+            pinTo3D(fNums[4], cYY, new THREE.Vector2(-1, -1), faceY);
+            pinTo3D(fNums[5], cYZ, new THREE.Vector2(1, 1), faceY);
+        }
+
+        // Phase 4: Row 3 - Front Face (21-29s micro)
+        if (microT >= 21 && microT < 29) {
+            txtRow3.classList.add('visible');
+            faceZ.material.opacity = 0.3;
+            
+            const p = Math.min((microT - 21) / 3.0, 1.0);
+            updateArrow(cZZ, faceZPos, new THREE.Vector3(0, 0, SIGMA[2][2]*p), s);
+
+            pinTo3D(fNums[6], cZX, new THREE.Vector2(-1, 1), faceZ);
+            pinTo3D(fNums[7], cZY, new THREE.Vector2(1, 1), faceZ);
+            pinTo3D(fNums[8], cZZ, new THREE.Vector2(1, -1), faceZ);
+        }
+
+        // Phase 5: The Matrix Flies (29-35s micro)
+        if (microT >= 29 && microT < 35) {
+            txtFly.classList.add('visible');
+            bLeft.classList.add('visible');
+            bRight.classList.add('visible');
+            
+            const fade = Math.max(1.0 - (microT - 18) * 2.0, 0.0);
+            cubeGroup.scale.set(fade, fade, fade);
+            
+            for (let r=0; r<3; r++) {
+                for (let c=0; c<3; c++) {
+                    const f = fNums[r*3 + c];
+                    f.className = `f-num visible grid-pos r${r} c${c}`;
+                }
+            }
+        }
+
+        // Phase 6: How to Read (35-45s micro)
+        if (microT >= 35) {
+            txtRead.classList.add('visible');
+            bLeft.classList.add('visible');
+            bRight.classList.add('visible');
+            
+            for (let r=0; r<3; r++) {
+                for (let c=0; c<3; c++) {
+                    const f = fNums[r*3 + c];
+                    f.className = `f-num visible grid-pos r${r} c${c}`;
+                }
+            }
+
+            fNums[3].classList.add('glow-green');
+
+            if (microT > 37) {
+                annFace.classList.add('visible');
+                annDir.classList.add('visible');
+                lineFace.classList.add('visible');
+                lineDir.classList.add('visible');
+                
+                annFace.textContent = "Row 2 = Top Face";
+                annDir.textContent = "Col 1 = X Direction";
+
+                annFace.style.left = '30%'; annFace.style.top = '65%';
+                annDir.style.left = '50%'; annDir.style.top = '30%';
+                
+                const rectFace = annFace.getBoundingClientRect();
+                const rectDir = annDir.getBoundingClientRect();
+                
+                const targetRect = fNums[3].getBoundingClientRect();
+                
+                updateAnnotationLine(lineFace, rectFace.right, rectFace.top + rectFace.height/2, targetRect.left, targetRect.top + targetRect.height/2);
+                updateAnnotationLine(lineDir, rectDir.right, rectDir.top + rectDir.height/2, targetRect.left + 5, targetRect.top - 5);
+            }
+        }
+    }
+}
+
+// ═══════════════ MAIN LOOP ═══════════════
+const btnPlay = document.getElementById('btn-play');
+const btnReset = document.getElementById('btn-reset');
+const tlBar = document.getElementById('tl-bar');
+
+btnPlay.addEventListener('click', () => { isPlaying = !isPlaying; btnPlay.textContent = isPlaying ? '⏸' : '▶'; });
+btnReset.addEventListener('click', () => { currentTime = 0; isPlaying = true; btnPlay.textContent = '⏸'; });
+tlBar.addEventListener('click', e => {
+    const rect = tlBar.getBoundingClientRect();
+    currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * DURATION;
+});
+
+function formatTime(s) { return Math.floor(s/60)+':'+Math.floor(s%60).toString().padStart(2,'0'); }
+
+let hasEmittedEnd = false;
+
+function animate(timestamp) {
+    requestAnimationFrame(animate);
+    const dt = lastTS ? Math.min((timestamp - lastTS) / 1000, 0.1) : 0;
+    lastTS = timestamp;
+
+    if (isPlaying) {
+        currentTime += dt;
+        if (currentTime >= DURATION) { 
+            currentTime = DURATION; 
+            isPlaying = false; 
+            btnPlay.textContent = '▶'; 
+            if (!hasEmittedEnd) {
+                hasEmittedEnd = true;
+                window.parent.postMessage('SCENE_END', '*');
+            }
+        }
+    }
+
+    runTimeline(currentTime);
+
+    tlFill.style.width = ((currentTime / DURATION) * 100) + '%';
+    tlCur.textContent = formatTime(currentTime);
+
+    renderer.render(scene, camera);
+}
+
+btnPlay.textContent = '⏸';
+requestAnimationFrame(animate);
+
+</script>
+</body>
+</html>

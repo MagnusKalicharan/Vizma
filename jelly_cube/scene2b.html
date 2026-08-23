@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 2B — What Is Stress? | Normal vs Shear</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for Mathematics -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" 
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#0b0e1a;--bg2:#111528;
+            --text:#e8ecf4;--dim:#6b7394;--accent:#64d2ff;
+            --red:#ff6b6b;--green:#69db7c;--blue:#74c0fc;
+            --yellow:#ffd43b;--orange:#ff922b;
+            --cyan:#22d3ee;--magenta:#c084fc;
+        }
+        body{font-family:'Inter',sans-serif;background:#0d0d1a;color:var(--text);overflow:hidden;height:100vh;width:100vw}
+        #scene{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+
+        .letterbox{position:fixed;left:0;right:0;height:60px;background:#000;z-index:5;pointer-events:none}
+        .letterbox.top{top:0}
+        .letterbox.bottom{bottom:0}
+
+        .split-divider{position:fixed;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,0.08);z-index:15;pointer-events:none}
+
+        .overlay{position:fixed;z-index:10;pointer-events:none}
+
+        .scene-label{
+            top:74px;left:40px;
+            font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+            color:var(--dim);opacity:0;transition:opacity 0.6s ease;
+        }
+        .scene-label.visible{opacity:1}
+        .scene-label span{color:var(--cyan)}
+
+        /* Cinematic Text Overlays */
+        .cinetext {
+            bottom: 12%; left: 50%; transform: translate(-50%, 0%);
+            text-align: center; width: max-content; max-width: 90vw;
+            font-size: clamp(22px, 2.2vw, 38px); font-weight: 700;
+            letter-spacing: -0.02em; line-height: 1.3;
+            color: #ffffff;
+            text-shadow: 0 4px 20px rgba(0,0,0,1.0), 0 2px 6px rgba(0,0,0,0.9);
+            opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease;
+            pointer-events: none; z-index: 25;
+        }
+        .cinetext.visible { opacity: 1; transform: translate(-50%, -10px); }
+        .cinetext .sub { font-size: clamp(14px, 1.2vw, 22px); color: #9ba7c9; font-weight: 400; display: block; margin-top: 10px; }
+        .cinetext .sub.cyan { color: var(--cyan); }
+        .cinetext .sub.green { color: var(--green); }
+        .cinetext .sub.gold { color: var(--yellow); }
+        .cinetext .katex { text-shadow: 0 4px 20px rgba(0,0,0,1.0), 0 2px 6px rgba(0,0,0,0.9); }
+
+        /* Stress Component Card */
+        .stress-card {
+            top: 80px; right: 40px;
+            padding: 20px 28px;
+            background: rgba(11,14,26,0.88);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(100,210,255,0.12);
+            border-radius: 14px;
+            opacity: 0; transition: opacity 0.8s ease;
+            min-width: 260px;
+        }
+        .stress-card.visible { opacity: 1; }
+        .sc-title { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; }
+        .sc-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 15px; }
+        .sc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .sc-label { color: #9ba7c9; min-width: 80px; }
+        .sc-val { font-family: 'JetBrains Mono', monospace; font-weight: 500; min-width: 60px; text-align: right; transition: all 0.3s ease; }
+        .sc-bar { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); overflow: hidden; min-width: 80px; }
+        .sc-bar-fill { height: 100%; border-radius: 2px; transition: width 0.15s ease; }
+
+        .timeline{
+            position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;
+            display:flex;align-items:center;gap:12px;
+            padding:8px 16px; width: 90%; max-width: 700px;
+            background:rgba(11,14,26,0.9);border:1px solid rgba(255,255,255,0.06);
+            border-radius:999px;
+            pointer-events: auto;
+        }
+        .tl-time{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);min-width:40px;text-align:center}
+        .tl-bar{flex-grow:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.08);cursor:pointer;position:relative}
+        .tl-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--magenta));width:0%}
+        .tl-btn{
+            width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+            background:transparent;color:var(--text);cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            font-size:11px;transition:all 0.2s ease;
+        }
+        .tl-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+    </style>
+</head>
+<body>
+
+<div id="scene"></div>
+<div class="letterbox top"></div>
+<div class="letterbox bottom"></div>
+<div class="split-divider"></div>
+
+<div class="overlay scene-label" id="scene-label">Scene 02b · <span>What Is Stress?</span></div>
+
+<!-- Text Overlays -->
+<div class="overlay cinetext" id="txt-title">Normal Stress vs Shear Stress</div>
+
+<div class="overlay cinetext" id="txt-normal-title">$\sigma_{nn}$ — Normal Stress<br><span class="sub cyan">Force perpendicular to the cut face</span></div>
+<div class="overlay cinetext" id="txt-compress">Compression ($\sigma < 0$)<br><span class="sub">Pushes inward — molecules resist being crushed</span></div>
+<div class="overlay cinetext" id="txt-tension">Tension ($\sigma > 0$)<br><span class="sub">Pulls outward — molecules resist being torn apart</span></div>
+<div class="overlay cinetext" id="txt-normal-key">Normal stress always acts $\perp$ to the surface</div>
+
+<div class="overlay cinetext" id="txt-shear-title">$\tau_{xy}$ — Shear Stress<br><span class="sub green">Force parallel to the cut face</span></div>
+<div class="overlay cinetext" id="txt-shear">Shear ($\tau \neq 0$)<br><span class="sub">Tries to slide the two halves past each other</span></div>
+<div class="overlay cinetext" id="txt-shear-key">Shear stress always acts $\parallel$ to the surface</div>
+
+<div class="overlay cinetext" id="txt-combo-title">Combined State: $\sigma + \tau$<br><span class="sub gold">Both act simultaneously on every cut face</span></div>
+<div class="overlay cinetext" id="txt-combo-result">$\mathbf{t} = \sigma_{nn}\hat{n} + \tau\hat{s}$<br><span class="sub gold">The traction vector is tilted because of shear!</span></div>
+<div class="overlay cinetext" id="txt-matrix">$\begin{bmatrix} t_x \\ t_y \\ t_z \end{bmatrix} = \begin{bmatrix} \sigma_{xx} & \color{#69db7c}{\tau_{xy}} & \color{#69db7c}{\tau_{xz}} \\ \color{#69db7c}{\tau_{yx}} & \sigma_{yy} & \color{#69db7c}{\tau_{yz}} \\ \color{#69db7c}{\tau_{zx}} & \color{#69db7c}{\tau_{zy}} & \sigma_{zz} \end{bmatrix} \begin{bmatrix} n_x \\ n_y \\ n_z \end{bmatrix}$<br><span class="sub">The <span class="green">off-diagonal terms</span> cause the tilt</span></div>
+
+<div id="label-normal" class="overlay" style="color:#64d2ff; font-size:20px; opacity:0; pointer-events:none; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">$\sigma \ (t_x)$</div>
+<div id="label-shear" class="overlay" style="color:#69db7c; font-size:20px; opacity:0; pointer-events:none; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">$\tau \ (t_y)$</div>
+<div id="label-result" class="overlay" style="color:#ffd43b; font-size:22px; opacity:0; pointer-events:none; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">$\mathbf{t}$</div>
+
+<!-- Right screen duplicates -->
+<div id="label-normal-right" class="overlay" style="color:#64d2ff; font-size:20px; opacity:0; pointer-events:none; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">$\sigma \ (t_x)$</div>
+<div id="label-shear-right" class="overlay" style="color:#69db7c; font-size:20px; opacity:0; pointer-events:none; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">$\tau \ (t_y)$</div>
+<div id="label-result-right" class="overlay" style="color:#ffd43b; font-size:22px; opacity:0; pointer-events:none; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">$\mathbf{t}$</div>
+
+<div class="timeline">
+    <button class="tl-btn" id="btn-play">▶</button>
+    <button class="tl-btn" id="btn-reset">⟲</button>
+    <span class="tl-time" id="tl-cur">0:00</span>
+    <div class="tl-bar" id="tl-bar"><div class="tl-fill" id="tl-fill"></div></div>
+    <span class="tl-time" id="tl-tot">1:00</span>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+// ═══════════════ CONSTANTS ═══════════════
+const DURATION = 60;
+const CUBE_SIZE = 2;
+const GRID_DIV = 6;
+
+// ═══════════════ STATE ═══════════════
+let currentTime = 0;
+let isPlaying = true;
+let lastTS = 0;
+let hasEmittedEnd = false;
+
+// ═══════════════ RENDERER ═══════════════
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0d1a);
+
+// Two cameras for split screen
+const camera = new THREE.PerspectiveCamera(35, (window.innerWidth/2) / window.innerHeight, 0.1, 100);
+camera.position.set(0, 2.5, 9); // Pulled back to prevent top/bottom cropping when cube expands
+const orbitCamera = new THREE.PerspectiveCamera(35, (window.innerWidth/2) / window.innerHeight, 0.1, 100);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.04;
+controls.enabled = false;
+
+// ═══════════════ LIGHTING (Scene 1 Studio Setup — Exact Match) ═══════════════
+const ambient = new THREE.AmbientLight(0x334466, 0.3);
+scene.add(ambient);
+
+const hemi = new THREE.HemisphereLight(0x8899cc, 0x111122, 0.3);
+scene.add(hemi);
+
+const keyLight = new THREE.DirectionalLight(0xfff5e6, 2.2);
+keyLight.position.set(6, 7, 5);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.near = 0.5;
+keyLight.shadow.camera.far = 25;
+keyLight.shadow.camera.left = -6;
+keyLight.shadow.camera.right = 6;
+keyLight.shadow.camera.top = 6;
+keyLight.shadow.camera.bottom = -6;
+keyLight.shadow.bias = -0.0005;
+keyLight.shadow.radius = 6;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0xaabbff, 1.2);
+fillLight.position.set(-6, 3, 2);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffffff, 2.0);
+rimLight.position.set(0, 5, -7);
+scene.add(rimLight);
+
+const bounceLight = new THREE.PointLight(0x556688, 1.5, 12);
+bounceLight.position.set(0, 2, 2);
+scene.add(bounceLight);
+
+// ═══════════════ 3D GRID (Floor) ═══════════════
+const floorGrid = new THREE.GridHelper(60, 60, 0x2a2a3e, 0x151520);
+floorGrid.position.y = 0;
+scene.add(floorGrid);
+
+// ═══════════════ JELLY CUBE ═══════════════
+const cubeGeo = new RoundedBoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, 6, 0.25);
+const jellyMat = new THREE.MeshPhysicalMaterial({
+    color: 0x88dddd,
+    roughness: 0.15,
+    metalness: 0.0,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+    transparent: true,
+    opacity: 0.55,
+    side: THREE.DoubleSide
+});
+const cube = new THREE.Mesh(cubeGeo, jellyMat);
+cube.castShadow = true;
+cube.receiveShadow = true;
+cube.position.y = 1;
+scene.add(cube);
+
+// Wireframe boundary removed per user request
+
+// ═══════════════ FEM WIREFRAME GRID (with Stress Heatmap) ═══════════════
+const femBaseGeo = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, GRID_DIV, GRID_DIV, GRID_DIV);
+const femWireGeo = new THREE.WireframeGeometry(femBaseGeo);
+
+// Store rest positions
+const femRestPositions = femWireGeo.attributes.position.array.slice();
+const femPositions = femWireGeo.attributes.position.array;
+const femVertCount = femPositions.length / 3;
+
+// Add vertex colors for heatmap
+const femColors = new Float32Array(femVertCount * 3);
+for (let i = 0; i < femVertCount; i++) {
+    femColors[i * 3] = 0.13;     // R
+    femColors[i * 3 + 1] = 0.83; // G
+    femColors[i * 3 + 2] = 0.93; // B (cyan default)
+}
+femWireGeo.setAttribute('color', new THREE.BufferAttribute(femColors, 3));
+
+const femMat = new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.55,
+    depthWrite: false
+});
+const femMesh = new THREE.LineSegments(femWireGeo, femMat);
+femMesh.position.y = 1;
+scene.add(femMesh);
+
+// ═══════════════ CUT PLANE VISUALIZATION ═══════════════
+const cutPlaneGeo = new THREE.PlaneGeometry(3, 3);
+const cutPlaneMat = new THREE.MeshBasicMaterial({
+    color: 0xffd43b, transparent: true, opacity: 0.08,
+    side: THREE.DoubleSide, depthWrite: false
+});
+const cutPlane = new THREE.Mesh(cutPlaneGeo, cutPlaneMat);
+cutPlane.rotation.y = Math.PI / 2;
+cutPlane.position.y = 1;
+cutPlane.visible = false;
+scene.add(cutPlane);
+
+const cutEdgesGeo = new THREE.EdgesGeometry(cutPlaneGeo);
+const cutEdgesMat = new THREE.LineBasicMaterial({ color: 0xffd43b, transparent: true, opacity: 0.4 });
+const cutEdges = new THREE.LineSegments(cutEdgesGeo, cutEdgesMat);
+cutEdges.rotation.y = Math.PI / 2;
+cutEdges.position.y = 1;
+cutEdges.visible = false;
+scene.add(cutEdges);
+
+// ═══════════════ ARROWS ═══════════════
+function makeDynamicArrow3D(color, headLen, headW, shaftR) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: 0.5,
+        roughness: 0.2,
+        metalness: 0.4,
+        transparent: true,
+        depthTest: false
+    });
+    
+    const sGeo = new THREE.CylinderGeometry(shaftR, shaftR, 1, 32);
+    sGeo.translate(0, 0.5, 0);
+    const shaft = new THREE.Mesh(sGeo, mat);
+    shaft.renderOrder = 999;
+    group.add(shaft);
+    
+    const hGeo = new THREE.ConeGeometry(headW, headLen, 32);
+    hGeo.translate(0, headLen / 2, 0);
+    const head = new THREE.Mesh(hGeo, mat);
+    head.renderOrder = 999;
+    group.add(head);
+    
+    group.userData = { shaft, head, headLen, mat };
+    group.update = function(origin, dir, length, opacity=1.0) {
+        this.position.set(...origin);
+        if (length < 0.01 || opacity <= 0) { this.visible = false; return; }
+        this.visible = true;
+        this.userData.mat.opacity = opacity;
+        const up = new THREE.Vector3(0, 1, 0);
+        const d = new THREE.Vector3(...dir).normalize();
+        this.quaternion.setFromUnitVectors(up, d);
+        const sLen = Math.max(0.01, length - this.userData.headLen);
+        this.userData.shaft.scale.set(1, sLen, 1);
+        this.userData.head.position.y = sLen;
+    };
+    return group;
+}
+
+// External force arrows
+const forceArrowL = makeDynamicArrow3D(0xff6b6b, 0.2, 0.15, 0.04);
+const forceArrowR = makeDynamicArrow3D(0xff6b6b, 0.2, 0.15, 0.04);
+const forceArrowT = makeDynamicArrow3D(0xff6b6b, 0.2, 0.15, 0.04);
+const forceArrowB = makeDynamicArrow3D(0xff6b6b, 0.2, 0.15, 0.04);
+scene.add(forceArrowL, forceArrowR, forceArrowT, forceArrowB);
+
+// Normal stress arrow (cyan)
+const normalArrow = makeDynamicArrow3D(0x22d3ee, 0.2, 0.15, 0.04);
+normalArrow.userData.mat.emissiveIntensity = 0.8; // Extra glow
+scene.add(normalArrow);
+
+const shearArrow = makeDynamicArrow3D(0x4ade80, 0.2, 0.15, 0.04);
+shearArrow.userData.mat.emissiveIntensity = 0.8;
+scene.add(shearArrow);
+
+const resultArrow = makeDynamicArrow3D(0xffd43b, 0.25, 0.2, 0.05);
+resultArrow.userData.mat.transparent = false;
+resultArrow.userData.mat.emissiveIntensity = 0.8;
+scene.add(resultArrow);
+
+// ═══════════════ UI ELEMENTS ═══════════════
+const elSceneLabel = document.getElementById('scene-label');
+const elTlFill = document.getElementById('tl-fill');
+const elTlCur = document.getElementById('tl-cur');
+const btnPlay = document.getElementById('btn-play');
+const btnReset = document.getElementById('btn-reset');
+const elTlBar = document.getElementById('tl-bar');
+
+const labelNormal = document.getElementById('label-normal');
+const labelShear  = document.getElementById('label-shear');
+const labelResult = document.getElementById('label-result');
+
+const labelNormalRight = document.getElementById('label-normal-right');
+const labelShearRight  = document.getElementById('label-shear-right');
+const labelResultRight = document.getElementById('label-result-right');
+const allTexts = ['txt-title', 'txt-normal-title', 'txt-compress', 'txt-tension', 'txt-normal-key',
+    'txt-shear-title', 'txt-shear', 'txt-shear-key', 'txt-combo-title', 'txt-combo-result', 'txt-matrix'
+].reduce((o, id) => { o[id] = document.getElementById(id); return o; }, {});
+
+btnPlay.addEventListener('click', () => { isPlaying = !isPlaying; btnPlay.textContent = isPlaying ? '⏸' : '▶'; controls.enabled = !isPlaying; });
+btnReset.addEventListener('click', () => { currentTime = 0; isPlaying = true; btnPlay.textContent = '⏸'; controls.enabled = false; });
+elTlBar.addEventListener('click', e => { const rect = elTlBar.getBoundingClientRect(); currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * DURATION; });
+
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ═══════════════ DEFORMATION FUNCTIONS ═══════════════
+// Heatmap color helper: maps strain magnitude [0,1] to a blue→cyan→green→yellow→red gradient
+function strainToColor(strain) {
+    const s = Math.min(Math.abs(strain), 1.0);
+    let r, g, b;
+    if (s < 0.25) {
+        const t = s / 0.25;
+        r = 0.1; g = 0.2 + t * 0.6; b = 0.9 - t * 0.1; // blue → cyan
+    } else if (s < 0.5) {
+        const t = (s - 0.25) / 0.25;
+        r = 0.1 + t * 0.3; g = 0.8; b = 0.8 - t * 0.7; // cyan → green
+    } else if (s < 0.75) {
+        const t = (s - 0.5) / 0.25;
+        r = 0.4 + t * 0.6; g = 0.8 - t * 0.1; b = 0.1; // green → yellow
+    } else {
+        const t = (s - 0.75) / 0.25;
+        r = 1.0; g = 0.7 - t * 0.5; b = 0.1 - t * 0.1; // yellow → red
+    }
+    return [r, g, b];
+}
+
+function deformFEM(compressX, shearXY) {
+    const poissonY = 1 + compressX * 0.35;
+    const poissonZ = 1 + compressX * 0.35;
+    const scaleX = 1 - compressX * 0.45;
+    const colors = femWireGeo.attributes.color.array;
+
+    for (let i = 0; i < femVertCount; i++) {
+        const rx = femRestPositions[i * 3];
+        const ry = femRestPositions[i * 3 + 1];
+        const rz = femRestPositions[i * 3 + 2];
+
+        // Apply compression (scale X, Poisson expand Y/Z)
+        let x = rx * scaleX;
+        let y = ry * poissonY;
+        let z = rz * poissonZ;
+
+        // Apply shear (offset X based on Y position)
+        x += (ry / (CUBE_SIZE / 2)) * shearXY * 0.5;
+
+        femPositions[i * 3] = x;
+        femPositions[i * 3 + 1] = y;
+        femPositions[i * 3 + 2] = z;
+
+        // Compute local strain as displacement magnitude
+        const dx = x - rx;
+        const dy = y - ry;
+        const dz = z - rz;
+        const disp = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        // Normalize to [0,1] range (max displacement ~ 0.8)
+        const strain = Math.min(disp / 0.7, 1.0);
+        const [cr, cg, cb] = strainToColor(strain);
+        colors[i * 3] = cr;
+        colors[i * 3 + 1] = cg;
+        colors[i * 3 + 2] = cb;
+    }
+    femWireGeo.attributes.position.needsUpdate = true;
+    femWireGeo.attributes.color.needsUpdate = true;
+
+    // Also deform the jelly cube to match
+    cube.scale.set(scaleX, poissonY, poissonZ);
+    cube.matrix.identity();
+    cube.matrix.makeScale(scaleX, poissonY, poissonZ);
+    const shearMat = new THREE.Matrix4();
+    shearMat.set(
+        1, shearXY * 0.5 / poissonY, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    );
+    cube.matrix.premultiply(shearMat);
+    cube.matrix.setPosition(0, poissonY, 0); // Uniformly sit on the floor
+    cube.matrixAutoUpdate = false;
+    cube.matrixWorldNeedsUpdate = true;
+
+    // (Wireframe removed)
+
+    // Fix FEM double-transformation: 
+    // The geometry is mathematically scaled in deformFEM, so the mesh ONLY needs vertical translation
+    // to sit perfectly aligned with the jelly cube on the floor.
+    femMesh.matrix.identity();
+    femMesh.matrix.setPosition(0, poissonY, 0);
+    femMesh.matrixAutoUpdate = false;
+    femMesh.matrixWorldNeedsUpdate = true;
+}
+
+function formatTime(s) { return Math.floor(s/60)+':'+Math.floor(s%60).toString().padStart(2,'0'); }
+
+function easeInOut(p) { return p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2; }
+
+// ═══════════════ CINEMATIC CAMERA ═══════════════
+function getCameraPos(t) {
+    let azimuth, elevation, dist;
+    if (t < 3) {
+        azimuth = 25; elevation = 15; dist = 8;
+    } else if (t < 8) {
+        let p = easeInOut((t - 3) / 5);
+        azimuth = 25 - p * 25; elevation = 15 - p * 5; dist = 8 - p * 2;
+    } else if (t < 40) {
+        azimuth = 0; elevation = 10; dist = 6;
+    } else if (t < 45) {
+        let p = easeInOut((t - 40) / 5);
+        azimuth = -p * 10; elevation = 10 + p * 5; dist = 6;
+    } else {
+        azimuth = -10; elevation = 15; dist = 6;
+    }
+    const az = azimuth * Math.PI / 180;
+    const el = elevation * Math.PI / 180;
+    return new THREE.Vector3(
+        dist * Math.cos(el) * Math.sin(az),
+        dist * Math.sin(el) + 1,
+        dist * Math.cos(el) * Math.cos(az)
+    );
+}
+
+// ═══════════════ RENDER LOOP ═══════════════
+function animate(timestamp) {
+    requestAnimationFrame(animate);
+    const dt = lastTS ? Math.min((timestamp - lastTS) / 1000, 0.1) : 0;
+    lastTS = timestamp;
+
+    if (isPlaying) {
+        currentTime += dt;
+        if (currentTime >= DURATION) { currentTime = DURATION; isPlaying = false; btnPlay.textContent = '▶'; controls.enabled = true; }
+    }
+    const t = currentTime;
+
+    // Camera
+    const camTarget = new THREE.Vector3(0, 1, 0);
+    if (isPlaying) {
+        const camPos = getCameraPos(t);
+        camera.position.lerp(camPos, 0.06);
+        camera.lookAt(camTarget);
+    } else {
+        controls.target.lerp(camTarget, 0.1);
+        controls.update();
+    }
+
+    // ═══════════════ CHOREOGRAPHY ═══════════════
+    let compressAmount = 0;
+    let shearAmount = 0;
+    let normalVal = 0;
+    let shearVal = 0;
+
+    // Phase 1: Normal Stress (0–20s)
+    if (t < 20) {
+        if (t >= 5 && t < 10) {
+            // Compression ramps up
+            let p = easeInOut((t - 5) / 5);
+            compressAmount = p * 1.0;
+            normalVal = -p * 1.25;
+        } else if (t >= 10 && t < 15) {
+            // Switch to tension (reverse)
+            let p = easeInOut((t - 10) / 5);
+            compressAmount = 1.0 - p * 2.0; // 1.0 -> -1.0
+            normalVal = -1.25 + p * 2.5; // -1.25 -> 1.25
+        } else if (t >= 15 && t < 20) {
+            // Return to compression for the key insight
+            let p = easeInOut((t - 15) / 5);
+            compressAmount = -1.0 + p * 2.0; // -1.0 -> 1.0
+            normalVal = 1.25 - p * 2.5; // 1.25 -> -1.25
+        }
+    }
+    // Phase 2: Shear Stress (20–40s)
+    else if (t < 40) {
+        if (t < 22) {
+            // Return to rest
+            let p = easeInOut((t - 20) / 2);
+            compressAmount = 1.0 * (1 - p);
+            normalVal = -1.25 * (1 - p);
+        } else if (t >= 25 && t < 30) {
+            // Shear ramps up
+            let p = easeInOut((t - 25) / 5);
+            shearAmount = p * 1.0;
+            shearVal = p * 0.47;
+        } else if (t >= 30 && t < 35) {
+            // Shear reverses
+            let p = easeInOut((t - 30) / 5);
+            shearAmount = 1.0 - p * 2.0;
+            shearVal = 0.47 - p * 0.94;
+        } else if (t >= 35 && t < 40) {
+            // Return to positive shear for key insight
+            let p = easeInOut((t - 35) / 5);
+            shearAmount = -1.0 + p * 2.0;
+            shearVal = -0.47 + p * 0.94;
+        }
+    }
+    // Phase 3: Combined (40–60s)
+    else {
+        if (t < 45) {
+            // Ramp up both
+            let p = easeInOut((t - 40) / 5);
+            compressAmount = p * 1.0;
+            shearAmount = p * 1.0;
+            normalVal = -p * 1.25;
+            shearVal = p * 0.47;
+        } else {
+            compressAmount = 1.0;
+            shearAmount = 1.0;
+            normalVal = -1.25;
+            shearVal = 0.47;
+        }
+    }
+
+    // Apply deformation
+    deformFEM(compressAmount, shearAmount);
+
+    // ═══════════════ EXTERNAL FORCE ARROWS ═══════════════
+    let extForceOp = 0;
+
+    // Compression/Tension arrows (Left/Right) — placed far away so they don't overlap internal arrows
+    if (t >= 5 && t < 20) {
+        extForceOp = 1.0;
+        if (t < 6) extForceOp = (t - 5);
+        if (compressAmount > 0) {
+            // Compression: arrows push inward from far edges
+            forceArrowL.update([-2.8, 1, 0], [1, 0, 0], Math.abs(compressAmount) * 1.2, extForceOp * 0.5);
+            forceArrowR.update([2.8, 1, 0], [-1, 0, 0], Math.abs(compressAmount) * 1.2, extForceOp * 0.5);
+        } else {
+            // Tension: arrows pull outward from cube edges (NOT from center!)
+            forceArrowL.update([-1.6, 1, 0], [-1, 0, 0], Math.abs(compressAmount) * 1.2, extForceOp * 0.5);
+            forceArrowR.update([1.6, 1, 0], [1, 0, 0], Math.abs(compressAmount) * 1.2, extForceOp * 0.5);
+        }
+    } else if (t >= 40) {
+        // Combined: compression from far edges
+        extForceOp = Math.min((t - 40) / 2, 1.0);
+        forceArrowL.update([-2.8, 1, 0], [1, 0, 0], compressAmount * 1.2, extForceOp * 0.5);
+        forceArrowR.update([2.8, 1, 0], [-1, 0, 0], compressAmount * 1.2, extForceOp * 0.5);
+    } else {
+        forceArrowL.update([0, 0, 0], [1, 0, 0], 0, 0);
+        forceArrowR.update([0, 0, 0], [1, 0, 0], 0, 0);
+    }
+
+    // Shear arrows (Top/Bottom)
+    if (t >= 25 && t < 40) {
+        let sOp = Math.min((t - 25) / 2, 1.0);
+        if (shearAmount > 0) {
+            forceArrowT.update([0, 2.4, 0], [1, 0, 0], Math.abs(shearAmount) * 0.8, sOp * 0.6);
+            forceArrowB.update([0, -0.4, 0], [-1, 0, 0], Math.abs(shearAmount) * 0.8, sOp * 0.6);
+        } else {
+            forceArrowT.update([0, 2.4, 0], [-1, 0, 0], Math.abs(shearAmount) * 0.8, sOp * 0.6);
+            forceArrowB.update([0, -0.4, 0], [1, 0, 0], Math.abs(shearAmount) * 0.8, sOp * 0.6);
+        }
+    } else if (t >= 40) {
+        let sOp = Math.min((t - 40) / 2, 1.0);
+        forceArrowT.update([0, 2.4, 0], [1, 0, 0], shearAmount * 0.8, sOp * 0.6);
+        forceArrowB.update([0, -0.4, 0], [-1, 0, 0], shearAmount * 0.8, sOp * 0.6);
+    } else {
+        forceArrowT.update([0, 0, 0], [1, 0, 0], 0, 0);
+        forceArrowB.update([0, 0, 0], [1, 0, 0], 0, 0);
+    }
+
+    // ═══════════════ CUT PLANE ═══════════════
+    let cutVisible = (t > 5 && t < 20) || (t > 25 && t < 40) || (t > 42);
+    cutPlane.visible = cutVisible;
+    cutEdges.visible = cutVisible;
+    if (cutVisible) {
+        let cop = 0;
+        if (t > 5 && t < 7) cop = (t - 5) / 2;
+        else if (t > 5 && t < 20) cop = 1;
+        else if (t > 25 && t < 27) cop = (t - 25) / 2;
+        else if (t > 27 && t < 40) cop = 1;
+        else if (t > 42 && t < 44) cop = (t - 42) / 2;
+        else if (t > 44) cop = 1;
+        cutPlaneMat.opacity = cop * 0.08;
+        cutEdgesMat.opacity = cop * 0.4;
+    }
+
+    // ═══════════════ INTERNAL STRESS ARROWS ═══════════════
+    // Normal arrow (cyan) — perpendicular to cut face, originates at cut face center
+    let nArrowOp = 0;
+    if (t > 6 && t < 20) {
+        nArrowOp = Math.min((t - 6) / 1.5, 1.0);
+        let nDir = normalVal < 0 ? [-1, 0, 0] : [1, 0, 0];
+        // Offset origin slightly in Z so it never overlaps with external red arrows
+        normalArrow.update([0, 1, 0.15], nDir, Math.abs(normalVal) * 1.5, nArrowOp);
+    } else if (t > 42) {
+        nArrowOp = Math.min((t - 42) / 2, 1.0);
+        normalArrow.update([0, 1, 0.15], [-1, 0, 0], Math.abs(normalVal) * 1.5, nArrowOp);
+    } else {
+        normalArrow.update([0, 0, 0], [1, 0, 0], 0, 0);
+    }
+
+    // Shear arrow (green) — parallel to cut face
+    let sArrowOp = 0;
+    if (t > 26 && t < 40) {
+        sArrowOp = Math.min((t - 26) / 1.5, 1.0);
+        let sDir = shearVal > 0 ? [0, 1, 0] : [0, -1, 0];
+        // Scale up shear arrow significantly so it's clearly visible
+        shearArrow.update([0, 1, 0.15], sDir, Math.abs(shearVal) * 3.0, sArrowOp);
+    } else if (t > 42) {
+        // Phase 3: shear arrow must also be visible and BIG
+        sArrowOp = Math.min((t - 42) / 2, 1.0);
+        shearArrow.update([0, 1, 0.15], [0, 1, 0], Math.abs(shearVal) * 3.0, sArrowOp);
+    } else {
+        shearArrow.update([0, 0, 0], [1, 0, 0], 0, 0);
+    }
+
+    // Resultant arrow (yellow) — only in Phase 3
+    let rArrowOp = 0;
+    if (t > 47) {
+        rArrowOp = Math.min((t - 47) / 2, 1.0);
+        // Vector sum of normal and shear components
+        let rx = normalVal;
+        let ry = shearVal;
+        let rmag = Math.sqrt(rx*rx + ry*ry);
+        resultArrow.update([0, 1, 0.15], [rx, ry, 0], rmag * 2.0, rArrowOp);
+    } else {
+        resultArrow.update([0, 0, 0], [1, 0, 0], 0, 0);
+    }
+
+    // ═══════════════ UI UPDATES ═══════════════
+    elSceneLabel.classList.toggle('visible', t > 0.5);
+
+    // Update floating labels on the left screen!
+    const hw = window.innerWidth / 2;
+    const h = window.innerHeight;
+    
+    function updateLabel(lbl, op, len, arrow, cam, offsetLeft) {
+        if (op > 0) {
+            const pos = new THREE.Vector3(0, len, 0).applyQuaternion(arrow.quaternion).add(arrow.position);
+            pos.project(cam);
+            if (pos.z > 1.0 || Math.abs(pos.x) > 1.0 || Math.abs(pos.y) > 1.0) {
+                lbl.style.opacity = 0;
+            } else {
+                lbl.style.opacity = op;
+                lbl.style.left = `${offsetLeft + (pos.x * 0.5 + 0.5) * hw + 10}px`;
+                lbl.style.top = `${(pos.y * -0.5 + 0.5) * h - 20}px`;
+            }
+        } else {
+            lbl.style.opacity = 0;
+        }
+    }
+
+    if (t > 1) {
+        updateLabel(labelNormal, nArrowOp, Math.abs(normalVal) * 1.5, normalArrow, camera, 0);
+        updateLabel(labelShear, sArrowOp, Math.abs(shearVal) * 3.0, shearArrow, camera, 0);
+        
+        let rmag = Math.sqrt(normalVal*normalVal + shearVal*shearVal);
+        updateLabel(labelResult, rArrowOp, rmag * 2.0, resultArrow, camera, 0);
+    } else {
+        labelNormal.style.opacity = 0;
+        labelShear.style.opacity = 0;
+        labelResult.style.opacity = 0;
+    }
+
+    // Text overlays
+    function showText(id, show) {
+        if (allTexts[id]) allTexts[id].classList.toggle('visible', show);
+    }
+    showText('txt-title', t > 1 && t < 5);
+    showText('txt-normal-title', t > 5 && t < 8);
+    showText('txt-compress', t > 8 && t < 11);
+    showText('txt-tension', t > 11 && t < 15);
+    showText('txt-normal-key', t > 16 && t < 20);
+    showText('txt-shear-title', t > 22 && t < 26);
+    showText('txt-shear', t > 26 && t < 32);
+    showText('txt-shear-key', t > 35 && t < 40);
+    showText('txt-combo-title', t > 40 && t < 45);
+    showText('txt-combo-result', t > 47 && t < 53);
+    showText('txt-matrix', t > 53 && t < 60);
+
+    // Timeline
+    elTlCur.textContent = formatTime(t);
+    
+    if (t >= DURATION && !hasEmittedEnd) {
+        hasEmittedEnd = true;
+        window.parent.postMessage('SCENE_END', '*');
+    }
+
+    // ═══════════════ SPLIT SCREEN RENDER ═══════════════
+    // (hw and h are now defined above)
+
+    // Left Screen (Cinematic)
+    renderer.setViewport(0, 0, hw, h);
+    renderer.setScissor(0, 0, hw, h);
+    renderer.setScissorTest(true);
+    camera.aspect = hw / h;
+    camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+
+    // Right Screen (Orbiting)
+    const orbitSpeed = (t / DURATION) * Math.PI * 2.5;
+    orbitCamera.position.set(
+        6 * Math.sin(orbitSpeed),
+        2.5,
+        6 * Math.cos(orbitSpeed)
+    );
+    orbitCamera.lookAt(0, 1, 0);
+
+    renderer.setViewport(hw, 0, hw, h);
+    renderer.setScissor(hw, 0, hw, h);
+    renderer.setScissorTest(true);
+    orbitCamera.aspect = hw / h;
+    orbitCamera.updateProjectionMatrix();
+    renderer.render(scene, orbitCamera);
+
+    // Track HTML labels for the RIGHT screen using orbitCamera
+    if (t > 5 && t < 60) {
+        let rmag = Math.sqrt(normalVal*normalVal + shearVal*shearVal);
+        updateLabel(labelNormalRight, nArrowOp, Math.abs(normalVal) * 1.5, normalArrow, orbitCamera, hw);
+        updateLabel(labelShearRight, sArrowOp, Math.abs(shearVal) * 3.0, shearArrow, orbitCamera, hw);
+        updateLabel(labelResultRight, rArrowOp, rmag * 2.0, resultArrow, orbitCamera, hw);
+    } else {
+        labelNormalRight.style.opacity = 0;
+        labelShearRight.style.opacity = 0;
+        labelResultRight.style.opacity = 0;
+    }
+}
+
+// Pre-compile
+renderer.compile(scene, camera);
+renderer.compile(scene, orbitCamera);
+
+btnPlay.textContent = '⏸';
+
+// --- RECORDING & EXPORT UTILITY ---
+window.addEventListener('message', (e) => {
+    if (e.data === 'HIDE_UI') {
+        document.querySelectorAll('.timeline, .scene-label').forEach(el => el.style.display = 'none');
+    }
+});
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

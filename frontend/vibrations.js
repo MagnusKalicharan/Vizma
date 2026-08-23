@@ -834,7 +834,7 @@ window.initVibDoublePendulum = function() {
     const ctx = canvas.getContext('2d');
     const gCtx = graphCanvas.getContext('2d', { willReadFrequently: true });
     
-    let isAnimating = true;
+    let isAnimating = false;
     if (window.currentVibReqId) cancelAnimationFrame(window.currentVibReqId);
     
     const W = canvas.width;
@@ -848,10 +848,17 @@ window.initVibDoublePendulum = function() {
     const l1Input = document.getElementById('vdp-l1');
     const l2Input = document.getElementById('vdp-l2');
     const gInput = document.getElementById('vdp-g');
+    const t1Input = document.getElementById('vdp-t1');
+    const t2Input = document.getElementById('vdp-t2');
     
     const trace1Check = document.getElementById('vdp-trace1');
     const trace2Check = document.getElementById('vdp-trace2');
     const graphModeSelect = document.getElementById('vdp-graph-mode');
+    const solverSelect = document.getElementById('vdp-solver');
+    const dtInput = document.getElementById('vdp-dt');
+    const dtVal = document.getElementById('vdp-dt-val');
+    const countInput = document.getElementById('vdp-count');
+    const countVal = document.getElementById('vdp-count-val');
     
     let m1 = parseFloat(m1Input.value);
     let m2 = parseFloat(m2Input.value);
@@ -859,19 +866,39 @@ window.initVibDoublePendulum = function() {
     let l2 = parseFloat(l2Input.value);
     let G = parseFloat(gInput.value);
     
-    // Physics State [theta1, theta2, omega1, omega2]
-    // Default to a small angle to demonstrate periodic Lissajous figures
-    let state = [0.5, 0, 0, 0]; 
-    
-    let trace1 = [];
-    let trace2 = [];
-    const MAX_TRACE = 300;
+    // Array of physics states — one per pendulum
+    // Each state = [theta1, theta2, omega1, omega2]
+    let states = [];
+    let traces2 = []; // trace for mass 2 per pendulum
+    let traces1 = []; // trace for mass 1 (primary only)
+    const MAX_TRACE = 400;
     
     let graphData = [];
     const MAX_GRAPH = 500;
     
     let time = 0;
     let lastTime = performance.now();
+    
+    // Colour palette — evenly spaced HSL hues for up to 15 pendulums
+    function pendulumColor(idx, total, alpha) {
+        let hue = (idx / Math.max(total - 1, 1)) * 270; // 0° red → 270° violet
+        return `hsla(${hue}, 90%, 50%, ${alpha})`;
+    }
+    
+    function buildStates() {
+        let count = countInput ? parseInt(countInput.value) : 1;
+        let baseT1 = parseFloat(t1Input.value);
+        let baseT2 = parseFloat(t2Input.value);
+        states = [];
+        traces2 = [];
+        traces1 = [];
+        for (let i = 0; i < count; i++) {
+            let offsetRad = i * (Math.PI / 180); // 1° per pendulum
+            states.push([baseT1 + offsetRad, baseT2, 0, 0]);
+            traces2.push([]);
+            traces1.push([]);
+        }
+    }
     
     // For persistent Lissajous
     let lastGraphMode = graphModeSelect.value;
@@ -884,16 +911,11 @@ window.initVibDoublePendulum = function() {
         l1Input.value = 1.5;
         l2Input.value = 1.5;
         gInput.value = 9.8;
+        t1Input.value = 0.5;
+        t2Input.value = 0;
+        if (countInput) { countInput.value = 1; if (countVal) countVal.innerText = '1'; }
+        if (dtInput)    { dtInput.value = 0.016; if (dtVal)   dtVal.innerText = '0.016'; }
         updateVals();
-        
-        state = [0.5, 0, 0, 0];
-        trace1 = [];
-        trace2 = [];
-        graphData = [];
-        time = 0;
-        lastLissajousX = -1;
-        lastLissajousY = -1;
-        clearGraph();
     }
     
     function updateVals() {
@@ -907,6 +929,15 @@ window.initVibDoublePendulum = function() {
         document.getElementById('vdp-l1-val').innerText = l1;
         document.getElementById('vdp-l2-val').innerText = l2;
         document.getElementById('vdp-g-val').innerText = G.toFixed(1);
+        document.getElementById('vdp-t1-val').innerText = parseFloat(t1Input.value).toFixed(2);
+        document.getElementById('vdp-t2-val').innerText = parseFloat(t2Input.value).toFixed(2);
+        
+        time = 0;
+        graphData = [];
+        lastLissajousX = -1;
+        lastLissajousY = -1;
+        buildStates();
+        clearGraph();
     }
     
     m1Input.oninput = updateVals;
@@ -914,6 +945,12 @@ window.initVibDoublePendulum = function() {
     l1Input.oninput = updateVals;
     l2Input.oninput = updateVals;
     gInput.oninput = updateVals;
+    t1Input.oninput = updateVals;
+    t2Input.oninput = updateVals;
+    if (countInput) countInput.oninput = () => {
+        if (countVal) countVal.innerText = countInput.value;
+        buildStates();
+    };
     
     
     function clearGraph() {
@@ -967,19 +1004,53 @@ graphModeSelect.onchange = () => {
         return [w1, w2, alpha1, alpha2];
     }
     
-    function rk4Step(dt) {
-        let k1 = getDerivatives(state);
-        let s2 = state.map((v, i) => v + k1[i] * dt * 0.5);
+    // Solver functions that operate on a given state array (not global)
+    function rk4StepOn(s, dt) {
+        let k1 = getDerivatives(s);
+        let s2 = s.map((v,i) => v + k1[i]*dt*0.5);
         let k2 = getDerivatives(s2);
-        let s3 = state.map((v, i) => v + k2[i] * dt * 0.5);
+        let s3 = s.map((v,i) => v + k2[i]*dt*0.5);
         let k3 = getDerivatives(s3);
-        let s4 = state.map((v, i) => v + k3[i] * dt);
+        let s4 = s.map((v,i) => v + k3[i]*dt);
         let k4 = getDerivatives(s4);
-        
-        for(let i=0; i<4; i++) {
-            state[i] += (dt / 6) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
-        }
+        for (let i=0; i<4; i++) s[i] += (dt/6)*(k1[i]+2*k2[i]+2*k3[i]+k4[i]);
     }
+    function rk5StepOn(s, dt) {
+        let k1 = getDerivatives(s);
+        let s2 = s.map((v,i) => v + dt*(1/5)*k1[i]);
+        let k2 = getDerivatives(s2);
+        let s3 = s.map((v,i) => v + dt*(3/40*k1[i] + 9/40*k2[i]));
+        let k3 = getDerivatives(s3);
+        let s4 = s.map((v,i) => v + dt*(44/45*k1[i] - 56/15*k2[i] + 32/9*k3[i]));
+        let k4 = getDerivatives(s4);
+        let s5 = s.map((v,i) => v + dt*(19372/6561*k1[i] - 25360/2187*k2[i] + 64448/6561*k3[i] - 212/729*k4[i]));
+        let k5 = getDerivatives(s5);
+        let s6 = s.map((v,i) => v + dt*(9017/3168*k1[i] - 355/33*k2[i] + 46732/5247*k3[i] + 49/176*k4[i] - 5103/18656*k5[i]));
+        let k6 = getDerivatives(s6);
+        for (let i=0; i<4; i++) s[i] += dt*(35/384*k1[i] + 500/1113*k3[i] + 125/192*k4[i] - 2187/6784*k5[i] + 11/84*k6[i]);
+    }
+    
+    function symplecticEulerStepOn(s, dt) {
+        let d = getDerivatives(s);
+        s[2] += d[2]*dt; s[3] += d[3]*dt;
+        s[0] += s[2]*dt; s[1] += s[3]*dt;
+    }
+    function velocityVerletStepOn(s, dt) {
+        let d1 = getDerivatives(s);
+        s[2] += 0.5*d1[2]*dt; s[3] += 0.5*d1[3]*dt;
+        s[0] += s[2]*dt;      s[1] += s[3]*dt;
+        let d2 = getDerivatives(s);
+        s[2] += 0.5*d2[2]*dt; s[3] += 0.5*d2[3]*dt;
+    }
+    function stepState(s, dt) {
+        let solver = solverSelect ? solverSelect.value : 'rk4';
+        if      (solver === 'rk5')             rk5StepOn(s, dt);
+        else if (solver === 'symplectic_euler') symplecticEulerStepOn(s, dt);
+        else if (solver === 'velocity_verlet') velocityVerletStepOn(s, dt);
+        else                                    rk4StepOn(s, dt);
+    }
+    
+    // (legacy single-step functions kept for reference — multi-pendulum uses stepState)
     
     
     function drawGraph() {
@@ -1126,180 +1197,173 @@ graphModeSelect.onchange = () => {
         }
 
     }
-function animate(currentTime) {
-        if (!isAnimating) {
-            lastTime = currentTime;
-            window.currentVibReqId = requestAnimationFrame(animate);
-            return;
+    function animate(currentTime) {
+        const pxPerMeter = 90;
+        const pivotX = W / 2;
+        const pivotY = H / 2 - 60;
+        const n = states.length;
+        
+        if (isAnimating) {
+            let customDt = dtInput ? parseFloat(dtInput.value) : 0.016;
+            for (let p = 0; p < n; p++) {
+                stepState(states[p], customDt);
+            }
+            time += customDt;
         }
-        
-        let dt = (currentTime - lastTime) / 1000;
-        lastTime = currentTime;
-        
-        if (dt > 0.1) dt = 0.016; 
-        
-        const subSteps = 15;
-        let subDt = dt / subSteps;
-        for(let i=0; i<subSteps; i++) {
-            rk4Step(subDt);
-        }
-        time += dt;
-        
-        let wrapT1 = state[0] % (2*Math.PI);
-        if(wrapT1 > Math.PI) wrapT1 -= 2*Math.PI;
-        else if (wrapT1 < -Math.PI) wrapT1 += 2*Math.PI;
-        
-        let wrapT2 = state[1] % (2*Math.PI);
-        if(wrapT2 > Math.PI) wrapT2 -= 2*Math.PI;
-        else if (wrapT2 < -Math.PI) wrapT2 += 2*Math.PI;
-        
-        let realX1 = l1 * Math.sin(state[0]);
-        let realY1 = l1 * Math.cos(state[0]);
-        let realX2 = realX1 + l2 * Math.sin(state[1]);
-        let realY2 = realY1 + l2 * Math.cos(state[1]);
-        
-
-        // Calculate Energy
-        let w1 = state[2], w2 = state[3];
-        let v1_sq = l1*l1 * w1*w1;
-        let v2_sq = l1*l1 * w1*w1 + l2*l2 * w2*w2 + 2*l1*l2*w1*w2*Math.cos(state[0] - state[1]);
-        
-        let kinT = 0.5 * m1 * v1_sq + 0.5 * m2 * v2_sq;
-        // Using pivot as zero potential energy (y is down)
-        let potV = (m1 + m2) * G * l1 * (1 - Math.cos(state[0])) + m2 * G * l2 * (1 - Math.cos(state[1]));
-        let totE = kinT + potV;
-
-        graphData.push({ t1: wrapT1, t2: wrapT2, x2: realX2, y2: realY2, kin: kinT, pot: potV, tot: totE });
-
-        if(graphData.length > MAX_GRAPH) graphData.shift();
-        
-        // Scale meters to pixels (e.g. 1 meter = 80 pixels)
-        const pxPerMeter = 80;
-        
-        let pivotX = W / 2;
-        let pivotY = H / 3;
-        
-        let canvasX1 = pivotX + realX1 * pxPerMeter;
-        let canvasY1 = pivotY + realY1 * pxPerMeter;
-        
-        let canvasX2 = pivotX + realX2 * pxPerMeter;
-        let canvasY2 = pivotY + realY2 * pxPerMeter;
-        
-        if (trace1Check && trace1Check.checked) trace1.push({x: canvasX1, y: canvasY1});
-        if (trace2Check && trace2Check.checked) trace2.push({x: canvasX2, y: canvasY2});
-        
-        if (trace1.length > MAX_TRACE) trace1.shift();
-        if (trace2.length > MAX_TRACE) trace2.shift();
         
         ctx.clearRect(0, 0, W, H);
         
-        // Draw Traces
-        if (trace1Check && trace1Check.checked && trace1.length > 1) {
-            ctx.beginPath();
-            for(let i=0; i<trace1.length; i++) {
-                ctx.lineTo(trace1[i].x, trace1[i].y);
+        // Compute positions for all pendulums
+        let positions = states.map(s => {
+            let rx1 = l1 * Math.sin(s[0]);
+            let ry1 = l1 * Math.cos(s[0]);
+            let rx2 = rx1 + l2 * Math.sin(s[1]);
+            let ry2 = ry1 + l2 * Math.cos(s[1]);
+            return {
+                cx1: pivotX + rx1 * pxPerMeter,
+                cy1: pivotY + ry1 * pxPerMeter,
+                cx2: pivotX + rx2 * pxPerMeter,
+                cy2: pivotY + ry2 * pxPerMeter,
+                rx2, ry2
+            };
+        });
+        
+        // Update & draw traces for mass 2 (all pendulums)
+        if (trace2Check && trace2Check.checked) {
+            for (let p = 0; p < n; p++) {
+                if (isAnimating) traces2[p].push({ x: positions[p].cx2, y: positions[p].cy2 });
+                if (traces2[p].length > MAX_TRACE) traces2[p].shift();
             }
-            ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)'; 
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        if (trace2Check && trace2Check.checked && trace2.length > 1) {
-            ctx.beginPath();
-            for(let i=0; i<trace2.length; i++) {
-                ctx.lineTo(trace2[i].x, trace2[i].y);
+            for (let p = 0; p < n; p++) {
+                if (traces2[p].length < 2) continue;
+                ctx.beginPath();
+                ctx.moveTo(traces2[p][0].x, traces2[p][0].y);
+                for (let i = 1; i < traces2[p].length; i++) {
+                    ctx.lineTo(traces2[p][i].x, traces2[p][i].y);
+                }
+                ctx.strokeStyle = pendulumColor(p, n, 0.45);
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
             }
-            ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
         }
         
-        // Draw rods
-        ctx.beginPath();
-        ctx.moveTo(pivotX, pivotY);
-        ctx.lineTo(canvasX1, canvasY1);
-        ctx.lineTo(canvasX2, canvasY2);
-        ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 4;
-        ctx.stroke();
+        // Update & draw trace for mass 1 (all pendulums, same colour scheme)
+        if (trace1Check && trace1Check.checked) {
+            for (let p = 0; p < n; p++) {
+                if (isAnimating) traces1[p].push({ x: positions[p].cx1, y: positions[p].cy1 });
+                if (traces1[p].length > MAX_TRACE) traces1[p].shift();
+            }
+            for (let p = 0; p < n; p++) {
+                if (traces1[p].length < 2) continue;
+                ctx.beginPath();
+                ctx.moveTo(traces1[p][0].x, traces1[p][0].y);
+                for (let i = 1; i < traces1[p].length; i++) {
+                    ctx.lineTo(traces1[p][i].x, traces1[p][i].y);
+                }
+                // Primary (p=0) gets the classic green; others get their HSL colour
+                ctx.strokeStyle = p === 0 ? 'rgba(34, 197, 94, 0.55)' : pendulumColor(p, n, 0.35);
+                ctx.lineWidth = p === 0 ? 2 : 1.5;
+                ctx.stroke();
+            }
+        }
         
-        // Draw pivot
+        // Draw all pendulums back-to-front (last = primary on top)
+        for (let p = n - 1; p >= 0; p--) {
+            let pos = positions[p];
+            let col = pendulumColor(p, n, 1.0);
+            let colFade = pendulumColor(p, n, 0.55);
+            
+            // Rods — thinner for non-primary
+            ctx.beginPath();
+            ctx.moveTo(pivotX, pivotY);
+            ctx.lineTo(pos.cx1, pos.cy1);
+            ctx.lineTo(pos.cx2, pos.cy2);
+            ctx.strokeStyle = p === 0 ? '#475569' : colFade;
+            ctx.lineWidth = p === 0 ? 3 : 1.5;
+            ctx.stroke();
+            
+            // Mass 1
+            let r1 = (p === 0) ? 8 + (m1/30)*12 : 5;
+            ctx.beginPath();
+            ctx.arc(pos.cx1, pos.cy1, r1, 0, 2*Math.PI);
+            ctx.fillStyle = p === 0 ? '#22c55e' : colFade;
+            ctx.fill();
+            
+            // Mass 2
+            let r2 = (p === 0) ? 8 + (m2/30)*12 : 5;
+            ctx.beginPath();
+            ctx.arc(pos.cx2, pos.cy2, r2, 0, 2*Math.PI);
+            ctx.fillStyle = col;
+            ctx.fill();
+            if (p === 0) {
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        
+        // Pivot dot (always on top)
         ctx.beginPath();
-        ctx.arc(pivotX, pivotY, 5, 0, 2*Math.PI);
+        ctx.arc(pivotX, pivotY, 6, 0, 2*Math.PI);
         ctx.fillStyle = '#0f172a';
         ctx.fill();
         
-        // Draw masses (scale visually)
-        let r1 = 8 + (m1 / 30) * 12;
-        ctx.beginPath();
-        ctx.arc(canvasX1, canvasY1, r1, 0, 2*Math.PI);
-        ctx.fillStyle = '#22c55e';
-        ctx.fill();
-        ctx.strokeStyle = '#16a34a';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        let r2 = 8 + (m2 / 30) * 12;
-        ctx.beginPath();
-        ctx.arc(canvasX2, canvasY2, r2, 0, 2*Math.PI);
-        ctx.fillStyle = '#3b82f6';
-        ctx.fill();
-        ctx.strokeStyle = '#2563eb';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-
-        
-        // Draw velocity vectors and values
+        // Velocity vectors and labels — primary pendulum only
         const vectorsCheck = document.getElementById('vdp-vectors');
-        if (vectorsCheck && vectorsCheck.checked) {
-            let vX1 = state[2] * l1 * Math.cos(state[0]);
-            let vY1 = -state[2] * l1 * Math.sin(state[0]);
-            
-            let vX2 = vX1 + state[3] * l2 * Math.cos(state[1]);
-            let vY2 = vY1 - state[3] * l2 * Math.sin(state[1]);
-            
+        if (vectorsCheck && vectorsCheck.checked && states.length > 0) {
+            let s = states[0];
+            let pos = positions[0];
+            let vX1 = s[2] * l1 * Math.cos(s[0]);
+            let vY1 = -s[2] * l1 * Math.sin(s[0]);
+            let vX2 = vX1 + s[3] * l2 * Math.cos(s[1]);
+            let vY2 = vY1 - s[3] * l2 * Math.sin(s[1]);
             let v1Mag = Math.sqrt(vX1*vX1 + vY1*vY1);
             let v2Mag = Math.sqrt(vX2*vX2 + vY2*vY2);
-            
-            let endX1 = canvasX1 + vX1 * pxPerMeter * 0.5;
-            let endY1 = canvasY1 + vY1 * pxPerMeter * 0.5;
-            let endX2 = canvasX2 + vX2 * pxPerMeter * 0.5;
-            let endY2 = canvasY2 + vY2 * pxPerMeter * 0.5;
-            
+            let endX1 = pos.cx1 + vX1 * pxPerMeter * 0.5;
+            let endY1 = pos.cy1 + vY1 * pxPerMeter * 0.5;
+            let endX2 = pos.cx2 + vX2 * pxPerMeter * 0.5;
+            let endY2 = pos.cy2 + vY2 * pxPerMeter * 0.5;
             function drawArrow(x1, y1, x2, y2, color) {
                 let headlen = 12;
-                let angle = Math.atan2(y2 - y1, x2 - x1);
+                let angle = Math.atan2(y2-y1, x2-x1);
                 ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.lineTo(x2 - headlen * Math.cos(angle - Math.PI / 6), y2 - headlen * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+                ctx.lineTo(x2 - headlen*Math.cos(angle-Math.PI/6), y2 - headlen*Math.sin(angle-Math.PI/6));
                 ctx.moveTo(x2, y2);
-                ctx.lineTo(x2 - headlen * Math.cos(angle + Math.PI / 6), y2 - headlen * Math.sin(angle + Math.PI / 6));
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 3;
-                ctx.stroke();
+                ctx.lineTo(x2 - headlen*Math.cos(angle+Math.PI/6), y2 - headlen*Math.sin(angle+Math.PI/6));
+                ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
             }
-            
-            drawArrow(canvasX1, canvasY1, endX1, endY1, '#ef4444');
-            drawArrow(canvasX2, canvasY2, endX2, endY2, '#ef4444');
-            
-            // Draw text values
-            ctx.fillStyle = '#1e293b';
+            drawArrow(pos.cx1, pos.cy1, endX1, endY1, '#ef4444');
+            drawArrow(pos.cx2, pos.cy2, endX2, endY2, '#ef4444');
             ctx.font = 'bold 12px Arial';
-            
-            let deg1 = (state[0] * 180 / Math.PI).toFixed(0);
-            let deg2 = (state[1] * 180 / Math.PI).toFixed(0);
-            
-            let text1 = "v₁: " + v1Mag.toFixed(1) + " m/s | θ₁: " + deg1 + "°";
-            let text2 = "v₂: " + v2Mag.toFixed(1) + " m/s | θ₂: " + deg2 + "°";
-            
-            ctx.fillStyle = 'rgba(255,255,255,0.7)';
-            ctx.fillRect(canvasX1 + 15, canvasY1 - 25, ctx.measureText(text1).width + 10, 20);
-            ctx.fillRect(canvasX2 + 15, canvasY2 - 25, ctx.measureText(text2).width + 10, 20);
-            
+            let deg1 = (s[0]*180/Math.PI).toFixed(0);
+            let deg2 = (s[1]*180/Math.PI).toFixed(0);
+            let text1 = 'v₁: '+v1Mag.toFixed(1)+' m/s | θ₁: '+deg1+'°';
+            let text2 = 'v₂: '+v2Mag.toFixed(1)+' m/s | θ₂: '+deg2+'°';
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            ctx.fillRect(pos.cx1+15, pos.cy1-25, ctx.measureText(text1).width+10, 20);
+            ctx.fillRect(pos.cx2+15, pos.cy2-25, ctx.measureText(text2).width+10, 20);
             ctx.fillStyle = '#1e293b';
-            ctx.fillText(text1, canvasX1 + 20, canvasY1 - 10);
-            ctx.fillText(text2, canvasX2 + 20, canvasY2 - 10);
+            ctx.fillText(text1, pos.cx1+20, pos.cy1-10);
+            ctx.fillText(text2, pos.cx2+20, pos.cy2-10);
+        }
+        
+        // Energy graph — use primary pendulum state
+        if (states.length > 0) {
+            let s = states[0];
+            let wrapT1 = ((s[0] % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+            if (wrapT1 > Math.PI) wrapT1 -= 2*Math.PI;
+            let wrapT2 = ((s[1] % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+            if (wrapT2 > Math.PI) wrapT2 -= 2*Math.PI;
+            let rx2 = positions[0].rx2, ry2 = positions[0].ry2;
+            let w1 = s[2], w2 = s[3];
+            let v1_sq = l1*l1*w1*w1;
+            let v2_sq = l1*l1*w1*w1 + l2*l2*w2*w2 + 2*l1*l2*w1*w2*Math.cos(s[0]-s[1]);
+            let kinT = 0.5*m1*v1_sq + 0.5*m2*v2_sq;
+            let potV = (m1+m2)*G*l1*(1-Math.cos(s[0])) + m2*G*l2*(1-Math.cos(s[1]));
+            let totE = kinT + potV;
+            graphData.push({ t1: wrapT1, t2: wrapT2, x2: rx2, y2: ry2, kin: kinT, pot: potV, tot: totE });
+            if (graphData.length > MAX_GRAPH) graphData.shift();
         }
         
         drawGraph();
@@ -1312,9 +1376,15 @@ function animate(currentTime) {
     document.getElementById('vdp-play').onclick = () => {
         isAnimating = !isAnimating;
     };
+    if (dtInput && dtVal) {
+        dtInput.addEventListener('input', () => {
+            dtVal.innerText = dtInput.value;
+        });
+    }
     
     document.getElementById('vdp-reset').onclick = reset;
     
+    buildStates();
     clearGraph();
     animate(performance.now());
 };

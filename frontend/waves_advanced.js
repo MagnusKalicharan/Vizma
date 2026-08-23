@@ -272,6 +272,7 @@ window.initVibSurface = function() {
     
     playBtn.onclick = () => {
         isAnimating = !isAnimating;
+        toggleAudio();
     };
 };
 
@@ -293,6 +294,33 @@ window.initVibDoppler = function() {
     const voVal = document.getElementById('vdop-vo-val');
     const playBtn = document.getElementById('vdop-play');
     const resetBtn = document.getElementById('vdop-reset');
+    let audioCtx = null;
+    let dopplerOsc = null;
+    let masterGain = null;
+    const soundCb = document.getElementById('vdop-sound');
+
+    function toggleAudio() {
+        if (!soundCb || !soundCb.checked || !isAnimating) {
+            if (audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend();
+            }
+            return;
+        }
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            dopplerOsc = audioCtx.createOscillator();
+            masterGain = audioCtx.createGain();
+            dopplerOsc.type = 'sine';
+            dopplerOsc.connect(masterGain);
+            masterGain.connect(audioCtx.destination);
+            masterGain.gain.value = 0.2; // quiet
+            dopplerOsc.start();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
     
     const v = 150; // speed of sound (pixels / sec)
     let vs = parseFloat(vsInput.value) * v;
@@ -336,6 +364,23 @@ window.initVibDoppler = function() {
         if(dt > 0.1) dt = 0.016;
         
         t += dt;
+
+        if (audioCtx && dopplerOsc && isAnimating && soundCb && soundCb.checked) {
+            let dx = obsX - sourceX;
+            let sign = dx > 0 ? 1 : -1;
+            let vSrcRel = vs * sign;
+            let vObsRel = -vo * sign;
+            
+            let f_base = 300; // Hz
+            let effVsrc = Math.min(vSrcRel, v * 0.99); // avoid sonic boom div by zero
+            let f_obs = f_base * (v + vObsRel) / (v - effVsrc);
+            
+            if (f_obs < 0) f_obs = 0;
+            if (f_obs > 2000) f_obs = 2000;
+            
+            dopplerOsc.frequency.setTargetAtTime(f_obs, audioCtx.currentTime, 0.1);
+        }
+    
         timeSinceLastEmit += dt;
         
         sourceX += vs * dt;

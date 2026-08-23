@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene 1 — The Hook | Cauchy Stress Tensor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#0b0e1a;--bg2:#111528;
+            --text:#e8ecf4;--dim:#6b7394;--accent:#64d2ff;
+            --red:#ff6b6b;--green:#69db7c;--blue:#74c0fc;
+            --yellow:#ffd43b;--orange:#ff922b;
+        }
+        body{font-family:'Inter',sans-serif;background:#0d0d1a;color:var(--text);overflow:hidden;height:100vh;width:100vw}
+        #scene{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+
+        /* ── Cinematic letterbox bars ── */
+        .letterbox{position:fixed;left:0;right:0;height:60px;background:#000;z-index:5;pointer-events:none}
+        .letterbox.top{top:0}
+        .letterbox.bottom{bottom:0}
+
+        /* ── Overlays ── */
+        .overlay{position:fixed;z-index:10;pointer-events:none}
+
+        .tensor-card{
+            top:80px;right:40px;
+            padding:20px 28px;
+            background:rgba(11,14,26,0.85);
+            backdrop-filter:blur(12px);
+            border:1px solid rgba(100,210,255,0.12);
+            border-radius:12px;
+            opacity:0;transition:opacity 0.8s ease;
+        }
+        .tensor-card.visible{opacity:1}
+        .tensor-label{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+        .tensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-family:'JetBrains Mono',monospace;font-size:18px;line-height:1.6}
+        .tensor-grid .cell{padding:4px 8px;border-radius:4px;transition:all 0.4s ease}
+        .tensor-grid .cell.diag{color:var(--accent)}
+        .tensor-grid .cell.off{color:var(--yellow)}
+        .tensor-grid .cell.glow{background:rgba(100,210,255,0.15);box-shadow:0 0 20px rgba(100,210,255,0.1)}
+        .tensor-brackets{position:relative;padding:0 16px}
+        .tensor-brackets::before,.tensor-brackets::after{
+            content:'';position:absolute;top:-4px;bottom:-4px;width:3px;
+            border:2px solid var(--dim);border-radius:2px;
+        }
+        .tensor-brackets::before{left:0;border-right:none}
+        .tensor-brackets::after{right:0;border-left:none}
+
+        .tensor-notation{margin-top:12px;font-size:12px;color:var(--dim);text-align:center}
+        .tensor-notation .katex{font-size:14px!important}
+
+        .readout-card{
+            bottom:80px;left:40px;
+            padding:16px 24px;
+            background:rgba(11,14,26,0.85);
+            backdrop-filter:blur(12px);
+            border:1px solid rgba(100,210,255,0.08);
+            border-radius:10px;
+            opacity:0;transition:opacity 0.8s ease;
+            font-family:'JetBrains Mono',monospace;font-size:13px;
+        }
+        .readout-card.visible{opacity:1}
+        .readout-row{display:flex;gap:20px;align-items:center;margin-bottom:4px}
+        .readout-label{color:var(--dim);min-width:100px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em}
+        .readout-val{color:var(--accent);font-weight:500}
+        .readout-bar{height:3px;border-radius:2px;background:rgba(100,210,255,0.1);flex:1;min-width:120px;max-width:120px;overflow:hidden}
+        .readout-bar-fill{height:100%;border-radius:2px;background:var(--accent);transition:width 0.15s ease}
+
+        .hook-text{
+            bottom:45%;left:50%;transform:translate(-50%,50%);
+            text-align:center;width:max-content;
+            opacity:0;transition:opacity 1.2s ease;
+        }
+        .hook-text.visible{opacity:1}
+        .hook-text h1{
+            font-size:clamp(28px,4vw,56px);font-weight:700;
+            letter-spacing:-0.03em;line-height:1.2;
+            background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+        .hook-text .sub{
+            font-size:clamp(15px,1.6vw,22px);
+            color:#9ba7c9;
+            margin-top:12px;
+            font-weight:400;
+            letter-spacing:0.02em;
+        }
+
+        .scene-label{
+            top:74px;left:40px;
+            font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+            color:var(--dim);opacity:0;transition:opacity 0.6s ease;
+        }
+        .scene-label.visible{opacity:1}
+        .scene-label span{color:var(--accent)}
+
+        .timeline{
+            position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;
+            display:flex;align-items:center;gap:12px;
+            padding:8px 16px;
+            background:rgba(11,14,26,0.9);border:1px solid rgba(255,255,255,0.06);
+            border-radius:999px;
+            pointer-events: auto;
+        }
+        .tl-time{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);min-width:40px;text-align:center}
+        .tl-bar{width:min(500px,60vw);height:3px;border-radius:2px;background:rgba(255,255,255,0.08);cursor:pointer;position:relative}
+        .tl-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#a78bfa);width:0%}
+        .tl-btn{
+            width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+            background:transparent;color:var(--text);cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            font-size:11px;transition:all 0.2s ease;
+        }
+        .tl-btn:hover{border-color:var(--accent);color:var(--accent)}
+    </style>
+</head>
+<body>
+
+<div id="scene"></div>
+
+<div class="letterbox top"></div>
+<div class="letterbox bottom"></div>
+
+<div class="overlay scene-label" id="scene-label">Scene 01 · <span>The Hook</span></div>
+
+<!-- Removed numerical tensor and readout cards per user request -->
+
+<div class="overlay hook-text" id="hook-text">
+    <h1>Can ONE arrow describe<br>what's happening inside?</h1>
+    <div class="sub">The answer is more than a force.</div>
+</div>
+
+<div class="timeline">
+    <button class="tl-btn" id="btn-play">▶</button>
+    <button class="tl-btn" id="btn-reset">⟲</button>
+    <span class="tl-time" id="tl-cur">0:00</span>
+    <div class="tl-bar" id="tl-bar"><div class="tl-fill" id="tl-fill"></div></div>
+    <span class="tl-time" id="tl-tot">0:30</span>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+
+// ═══════════════ CONSTANTS ═══════════════
+const DURATION = 30;     // 30 seconds
+
+// ═══════════════ STATE ═══════════════
+let currentTime = 0;
+let isPlaying = true;
+let lastTS = 0;
+let hasEmittedEnd = false;
+
+// ═══════════════ RENDERER & POST-PROCESSING ═══════════════
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true }); 
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0d1a); // Dark cinematic void
+
+const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(5, 3, 6);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.04;
+controls.enabled = false;  
+
+// ═══════════════ LIGHTING (Studio Setup) ═══════════════
+const ambient = new THREE.AmbientLight(0x334466, 0.3);
+scene.add(ambient);
+
+const hemi = new THREE.HemisphereLight(0x8899cc, 0x111122, 0.3);
+scene.add(hemi);
+
+const keyLight = new THREE.DirectionalLight(0xfff5e6, 2.2);
+keyLight.position.set(6, 7, 5);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.near = 0.5;
+keyLight.shadow.camera.far = 25;
+keyLight.shadow.camera.left = -6;
+keyLight.shadow.camera.right = 6;
+keyLight.shadow.camera.top = 6;
+keyLight.shadow.camera.bottom = -6;
+keyLight.shadow.bias = -0.0005;
+keyLight.shadow.radius = 6; // Extra soft shadows
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0xaabbff, 1.2);
+fillLight.position.set(-6, 3, 2);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffffff, 2.0);
+rimLight.position.set(0, 5, -7);
+scene.add(rimLight);
+
+const bounceLight = new THREE.PointLight(0x556688, 1.5, 12);
+bounceLight.position.set(0, 2, 2);
+scene.add(bounceLight);
+
+// Studio Softbox for premium clearcoat reflections
+RectAreaLightUniformsLib.init();
+const softbox = new THREE.RectAreaLight(0xffffff, 2.5, 8, 8);
+softbox.position.set(0, 6, 2);
+softbox.lookAt(0, 0, 0);
+scene.add(softbox);
+
+// ═══════════════ 3D GRID (No solid floor!) ═══════════════
+// By keeping the floor purely as a wireframe grid at y=0, we can look at it from slightly above
+// and STILL clearly see the bottom vector pointing straight down through the empty grid spaces!
+const gridGroup = new THREE.Group();
+const floorGrid = new THREE.GridHelper(60, 60, 0x2a2a3e, 0x151520);
+floorGrid.position.y = 0; // Grid sits exactly at 0
+gridGroup.add(floorGrid);
+scene.add(gridGroup);
+
+// ═══════════════ JELLY CUBE ═══════════════
+const cubeGeo = new RoundedBoxGeometry(2, 2, 2, 6, 0.25);
+const jellyMat = new THREE.MeshPhysicalMaterial({
+    color: 0x88dddd,
+    roughness: 0.15,
+    metalness: 0.0,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+    transparent: true,
+    opacity: 0.55
+});
+const cube = new THREE.Mesh(cubeGeo, jellyMat);
+cube.castShadow = true;
+cube.receiveShadow = true;
+cube.matrixAutoUpdate = false;
+cube.matrixWorldNeedsUpdate = true;
+scene.add(cube);
+
+// Wireframe removed per user request
+
+// ═══════════════ VICE PLATES ═══════════════
+const plateGeo = new THREE.BoxGeometry(0.12, 2.6, 2.6);
+const plateMat = new THREE.MeshPhysicalMaterial({
+    color: 0x8899aa,
+    roughness: 0.1,
+    metalness: 0.2,
+    transmission: 0.9, 
+    thickness: 0.12,
+    transparent: true,
+});
+const plateL = new THREE.Mesh(plateGeo, plateMat);
+const plateR = new THREE.Mesh(plateGeo, plateMat.clone());
+plateL.castShadow = true;
+plateR.castShadow = true;
+scene.add(plateL);
+scene.add(plateR);
+
+// Force arrows
+function makeArrow3D(origin, dir, length, color, headLen, headW, shaftR) {
+    const group = new THREE.Group();
+    // Using StandardMaterial for high performance vectors
+    const mat = new THREE.MeshStandardMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: 0.5,
+        roughness: 0.2,
+        metalness: 0.4,
+        transparent: true,
+        depthTest: false
+    });
+    
+    // Smooth sleek cylinder
+    const sLen = length - headLen;
+    const sGeo = new THREE.CylinderGeometry(shaftR, shaftR, sLen, 32);
+    const shaft = new THREE.Mesh(sGeo, mat);
+    shaft.position.y = sLen / 2;
+    shaft.renderOrder = 999;
+    group.add(shaft);
+    
+    // Sharp sleek cone
+    const hGeo = new THREE.ConeGeometry(headW, headLen, 32);
+    const head = new THREE.Mesh(hGeo, mat);
+    head.position.y = sLen + headLen / 2;
+    head.renderOrder = 999;
+    group.add(head);
+    
+    const up = new THREE.Vector3(0, 1, 0);
+    const d = new THREE.Vector3(...dir).normalize();
+    group.quaternion.setFromUnitVectors(up, d);
+    group.position.set(...origin);
+    return group;
+}
+
+const forceArrowL = makeArrow3D([-2.8, 0, 0], [1, 0, 0], 1.2, 0xff6b6b, 0.2, 0.15, 0.04);
+const forceArrowR = makeArrow3D([2.8, 0, 0], [-1, 0, 0], 1.2, 0xff6b6b, 0.2, 0.15, 0.04);
+forceArrowL.visible = false;
+forceArrowR.visible = false;
+scene.add(forceArrowL);
+scene.add(forceArrowR);
+
+// ═══════════════ PREVIEW TRACTION ARROWS ═══════════════
+const previewArrows = new THREE.Group();
+previewArrows.visible = false;
+scene.add(previewArrows);
+
+const SIGMA_3D = [
+    [1.25, 0.47, 0.30],
+    [0.47, 0.75, -0.15],
+    [0.30,-0.15, 0.50]
+];
+function traction3D(n) {
+    return [
+        SIGMA_3D[0][0]*n[0] + SIGMA_3D[0][1]*n[1] + SIGMA_3D[0][2]*n[2],
+        SIGMA_3D[1][0]*n[0] + SIGMA_3D[1][1]*n[1] + SIGMA_3D[1][2]*n[2],
+        SIGMA_3D[2][0]*n[0] + SIGMA_3D[2][1]*n[1] + SIGMA_3D[2][2]*n[2]
+    ];
+}
+
+const faceNormals = [
+    { n: [1,0,0], origin: [0.60,0,0], color: 0xff6b6b },
+    { n: [-1,0,0], origin: [-0.60,0,0], color: 0xff6b6b },
+    { n: [0,1,0], origin: [0,1.40,0], color: 0x69db7c },
+    { n: [0,-1,0], origin: [0,-1.40,0], color: 0x69db7c },
+    { n: [0,0,1], origin: [0,0,1.40], color: 0x74c0fc },
+    { n: [0,0,-1], origin: [0,0,-1.40], color: 0x74c0fc },
+];
+
+faceNormals.forEach(f => {
+    const tDir = traction3D(f.n);
+    const mag = Math.sqrt(tDir[0]*tDir[0] + tDir[1]*tDir[1] + tDir[2]*tDir[2]);
+    if (mag > 0.01) {
+        const arrow = makeArrow3D(f.origin, tDir, mag * 1.2, f.color, 0.25, 0.15, 0.045);
+        arrow.scale.set(0.001, 0.001, 0.001); 
+        previewArrows.add(arrow);
+    }
+});
+
+// ═══════════════ PARTICLES ═══════════════
+const particleCount = 80;
+const particleGeo = new THREE.BufferGeometry();
+const pPositions = new Float32Array(particleCount * 3);
+const pVelocities = [];
+for (let i = 0; i < particleCount; i++) {
+    pPositions[i*3]   = (Math.random()-0.5)*16;
+    pPositions[i*3+1] = (Math.random()-0.5)*8 + 4; // Shifted up
+    pPositions[i*3+2] = (Math.random()-0.5)*16;
+    pVelocities.push((Math.random()-0.5)*0.003, (Math.random()-0.5)*0.002, (Math.random()-0.5)*0.003);
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+const particleMat = new THREE.PointsMaterial({ color: 0x6688aa, size: 0.05, sizeAttenuation: true, transparent:true, opacity:0.6 });
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// ═══════════════ UI ELEMENTS ═══════════════
+const elSceneLabel  = document.getElementById('scene-label');
+const elHookText    = document.getElementById('hook-text');
+const elTlFill      = document.getElementById('tl-fill');
+const elTlCur       = document.getElementById('tl-cur');
+const btnPlay       = document.getElementById('btn-play');
+const btnReset      = document.getElementById('btn-reset');
+const elTlBar       = document.getElementById('tl-bar');
+
+
+
+btnPlay.addEventListener('click', () => { isPlaying = !isPlaying; btnPlay.textContent = isPlaying ? '⏸' : '▶'; controls.enabled = !isPlaying; });
+btnReset.addEventListener('click', () => { currentTime = 0; isPlaying = true; btnPlay.textContent = '⏸'; controls.enabled = false; });
+elTlBar.addEventListener('click', e => { const rect = elTlBar.getBoundingClientRect(); currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * DURATION; });
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ═══════════════ ANIMATION TIMELINE ═══════════════
+function getCameraPos(t) {
+    let azimuth, elevation, dist;
+
+    if (t < 10) {
+        const p = t / 10;
+        azimuth = -40 + p * 25; // slow pan from -40 to -15
+        elevation = 20 + p * 5;
+        dist = 10.5 - p * 1; // 10.5 to 9.5
+    } else if (t < 13) {
+        const p = (t - 10) / 3;
+        const ep = p * p * (3 - 2 * p);
+        azimuth = -15 + ep * 25; // -15 to 10
+        elevation = 25 - ep * 5; // 25 to 20
+        dist = 9.5 - ep * 2.5;   // push in to 7.0 during squeeze
+    } else if (t < 18) {
+        const p = (t - 13) / 5;
+        azimuth = 10 + p * 30; // 10 to 40
+        elevation = 20 + Math.sin(p * Math.PI) * 3;
+        dist = 7.0 + p * 1.0;  // pull out slightly to 8.0
+    } else {
+        const p = (t - 18) / 12; // 12 seconds for the orbit
+        // Smooth ease-in-out for the 360 rotation
+        const ease = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+        azimuth = 40 + ease * 360;
+        // Keep camera above ground (5 to 15 degrees) to look at levitating cube
+        elevation = 10 + 5 * Math.cos(p * Math.PI * 2);
+        dist = 8.0 + Math.sin(p * Math.PI) * 1.5;
+    }
+
+    const az = azimuth * Math.PI / 180;
+    const el = elevation * Math.PI / 180;
+    return new THREE.Vector3(
+        dist * Math.cos(el) * Math.sin(az),
+        dist * Math.sin(el) + 1.0, // Aim slightly up
+        dist * Math.cos(el) * Math.cos(az)
+    );
+}
+
+function getSqueezeAmount(t) {
+    if (t < 10) return 0;
+    if (t < 13) {
+        let p = (t - 10) / 3;
+        return p * p * (3 - 2 * p); 
+    }
+    return 1.0; 
+}
+
+function getPlateX(t) {
+    const squeeze = getSqueezeAmount(t);
+    return 1.1 + (1 - squeeze) * 1.0;
+}
+
+function formatTime(s) { return Math.floor(s/60)+':'+Math.floor(s%60).toString().padStart(2,'0'); }
+
+// ═══════════════ RENDER LOOP ═══════════════
+function animate(timestamp) {
+    requestAnimationFrame(animate);
+    const dt = lastTS ? Math.min((timestamp - lastTS) / 1000, 0.1) : 0;
+    lastTS = timestamp;
+
+    if (isPlaying) {
+        currentTime += dt;
+        if (currentTime >= DURATION) { currentTime = DURATION; isPlaying = false; btnPlay.textContent = '▶'; controls.enabled = true; }
+    }
+
+    const t = currentTime;
+    const squeeze = getSqueezeAmount(t);
+    const compressX = 1 - squeeze * 0.45;
+    const bulgeYZ = 1 + squeeze * 0.35;
+    
+    // Subtle jelly wobble only when moving
+    const wobble = (t > 10 && t < 14) ? Math.sin(timestamp * 0.005) * 0.02 * squeeze : 0;
+    
+    cube.matrix.identity();
+    cube.matrix.makeScale(compressX + wobble, bulgeYZ + wobble, bulgeYZ + wobble);
+    const shearMat = new THREE.Matrix4();
+    shearMat.set(
+        1, -0.47 * squeeze * 0.5 / (bulgeYZ + wobble), 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    );
+    cube.matrix.premultiply(shearMat);
+    const currentHeight = bulgeYZ + wobble;
+    cube.matrix.setPosition(0, currentHeight, 0); 
+    cube.matrixAutoUpdate = false;
+    cube.matrixWorldNeedsUpdate = true;
+
+    // (Wireframe removed)
+
+    // Camera
+    const camTarget = new THREE.Vector3(0, currentHeight * 0.8, 0); // look near center of cube
+    if (isPlaying) {
+        const camPos = getCameraPos(t);
+        camera.position.lerp(camPos, 0.08);
+        camera.lookAt(camTarget);
+    } else {
+        controls.target.lerp(camTarget, 0.1);
+        controls.update();
+    }
+
+    // Vice plates (move up and down to stay centered on the cube)
+    const plateX = getPlateX(t);
+    plateL.position.x = -plateX;
+    plateR.position.x = plateX;
+    plateL.position.y = currentHeight;
+    plateR.position.y = currentHeight;
+    
+    if (t > 9.0 && t < 18.0) {
+        plateL.visible = true;
+        plateR.visible = true;
+        let plateOp = 1.0;
+        if (t < 10.5) plateOp = (t - 9.0) / 1.5;   // Fade in smoothly
+        if (t > 17.0) plateOp = 18.0 - t;         // Fade out smoothly
+        plateL.material.opacity = plateOp;
+        plateR.material.opacity = plateOp;
+    } else {
+        plateL.visible = false;
+        plateR.visible = false;
+    }
+
+    // Force arrows
+    if (t > 9.0 && t < 18.0) {
+        forceArrowL.visible = true;
+        forceArrowR.visible = true;
+        let op = 1.0;
+        if (t < 10.5) op = (t - 9.0) / 1.5;
+        if (t > 17.0) op = 18.0 - t;
+        
+        forceArrowL.children.forEach(c => { 
+            if(c.material) { c.material.transparent = true; c.material.opacity = op; }
+        });
+        forceArrowR.children.forEach(c => { 
+            if(c.material) { c.material.transparent = true; c.material.opacity = op; }
+        });
+        
+        // Exact traction vectors applied to the side faces
+        const lDir = [1.25, 0.47, 0];
+        const rDir = [-1.25, -0.47, 0];
+        
+        // Offset so they don't clip into the deformed slanted box
+        forceArrowL.position.set(-plateX - 0.2, currentHeight, 0);
+        forceArrowL.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(...lDir).normalize());
+        forceArrowR.position.set(plateX + 0.2, currentHeight, 0);
+        forceArrowR.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(...rDir).normalize());
+    } else {
+        forceArrowL.visible = false;
+        forceArrowR.visible = false;
+    }
+
+    // Preview arrows 
+    const inPreview = t >= 18;
+    previewArrows.visible = inPreview;
+    previewArrows.position.y = currentHeight;
+
+    if (inPreview) {
+        const pGrow = Math.min((t - 18) / 0.6, 1.0);
+        const easeGrow = 1 - Math.pow(1 - pGrow, 3);
+        previewArrows.children.forEach(a => a.scale.set(easeGrow, easeGrow, easeGrow));
+    } else {
+        previewArrows.children.forEach(a => a.scale.set(0.001, 0.001, 0.001));
+    }
+
+    // Particles
+    const pPos = particleGeo.attributes.position.array;
+    for (let i = 0; i < particleCount; i++) {
+        pPos[i*3]   += pVelocities[i*3];
+        pPos[i*3+1] += pVelocities[i*3+1];
+        pPos[i*3+2] += pVelocities[i*3+2];
+        if (pPos[i*3+1] < 0) pPos[i*3+1] = 8; // Reset to top if it hits ground
+        for (let j = 0; j < 3; j++) {
+            if (Math.abs(pPos[i*3+j]) > 8) pPos[i*3+j] *= -0.9;
+        }
+    }
+    particleGeo.attributes.position.needsUpdate = true;
+
+    // UI visibility
+    elSceneLabel.classList.toggle('visible', t > 0.5);
+    // (Numerical UI updates removed)
+    elHookText.classList.toggle('visible', t > 14.5 && t < 18.5);
+
+    elTlCur.textContent = formatTime(t);
+
+    if (t >= DURATION && !hasEmittedEnd) {
+        hasEmittedEnd = true;
+        window.parent.postMessage('SCENE_END', '*');
+    }
+
+    // Standard render
+    renderer.render(scene, camera);
+}
+
+btnPlay.textContent = '⏸';
+
+// --- RECORDING & EXPORT UTILITY ---
+window.addEventListener('message', (e) => {
+    if (e.data === 'HIDE_UI') {
+        document.querySelectorAll('.timeline, .scene-label').forEach(el => el.style.display = 'none');
+    }
+});
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

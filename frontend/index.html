@@ -29,6 +29,7 @@
             <select id="chapter-select" style="margin-top: 1rem; width: 100%; padding: 0.5rem; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); color: var(--fg); font-family: inherit; font-weight: bold; cursor: pointer;">
                 <option value="kinematics">Chapter 1: Kinematics</option>
                 <option value="vibrations">Chapter 2: Vibrations & Waves</option>
+                <option value="linalg">Chapter 3: Linear Algebra</option>
             </select>
         </div>
         
@@ -60,10 +61,19 @@
             <li><a href="#" class="nav-link" data-page="vib-doppler"><span class="nav-num">08</span> The Doppler Effect</a></li>
             <li><a href="#" class="nav-link" data-page="vib-beats"><span class="nav-num">09</span> Beat Frequencies</a></li>
             <li><a href="#" class="nav-link" data-page="vib-tubes"><span class="nav-num">10</span> Sound Tubes</a></li>
-                        <li><a href="#" class="nav-link" data-page="vib-em"><span class="nav-num">11</span> Electromagnetic Waves</a></li>
+            <li><a href="#" class="nav-link" data-page="vib-em"><span class="nav-num">11</span> Electromagnetic Waves</a></li>
             <li><a href="#" class="nav-link" data-page="vib-double-pendulum"><span class="nav-num">12</span> Double Pendulum</a></li>
+        </ul>
 
-
+        <ul class="nav-list" id="nav-linalg" style="display:none;">
+            <li><a href="#" class="nav-link active" data-page="linalg-index"><span class="nav-num">🏠</span> Chapter Home</a></li>
+            <li><a href="#" class="nav-link" data-page="la-vectors"><span class="nav-num">01</span> Vectors & Spaces</a></li>
+            <li><a href="#" class="nav-link" data-page="la-lincombo"><span class="nav-num">02</span> Linear Combinations</a></li>
+            <li><a href="#" class="nav-link" data-page="la-norms"><span class="nav-num">03</span> Norms & Unit Balls</a></li>
+            <li><a href="#" class="nav-link" data-page="la-transforms"><span class="nav-num">04</span> Linear Transforms</a></li>
+            <li><a href="#" class="nav-link" data-page="la-multiply"><span class="nav-num">05</span> Matrix Multiply</a></li>
+            <li><a href="#" class="nav-link" data-page="la-determinant"><span class="nav-num">06</span> Determinants</a></li>
+            <li><a href="#" class="nav-link" data-page="la-inverse"><span class="nav-num">07</span> Inverse Matrices</a></li>
         </ul>
     </nav>
 
@@ -2204,6 +2214,9 @@
                         <label>Observer Velocity ($v_o$): <strong id="vdop-vo-val">0.0</strong> v</label>
                         <input type="range" id="vdop-vo" min="-1.0" max="1.0" step="0.1" value="0.0">
                     </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label class="checkbox-label"><input type="checkbox" id="vdop-sound"> Enable Sound (Doppler Shift)</label>
+                    </div>
                     <button id="vdop-play" class="btn">Play / Pause</button>
                     <button id="vdop-reset" class="btn">Reset</button>
                 </div>
@@ -2346,6 +2359,14 @@
                         <label>Gravity ($g$): <strong id="vdp-g-val">9.8</strong></label>
                         <input type="range" id="vdp-g" min="1" max="30" step="0.1" value="9.8">
                     </div>
+                    <div class="control-group">
+                        <label>Initial Angle 1 ($\theta_1$): <strong id="vdp-t1-val">0.00</strong> rad</label>
+                        <input type="range" id="vdp-t1" min="-3.14" max="3.14" step="0.01" value="0.00">
+                    </div>
+                    <div class="control-group">
+                        <label>Initial Angle 2 ($\theta_2$): <strong id="vdp-t2-val">0.50</strong> rad</label>
+                        <input type="range" id="vdp-t2" min="-3.14" max="3.14" step="0.01" value="0.50">
+                    </div>
                     
                     <hr style="margin: 1rem 0; border-top: 1px solid #e2e8f0;">
                     
@@ -2355,6 +2376,24 @@
                         <label class="checkbox-label"><input type="checkbox" id="vdp-vectors" checked> Show Velocity Vectors & Values</label>
                     </div>
                     
+                    <div style="margin-bottom: 1rem;">
+                        <label style="font-weight:bold; display:block; margin-bottom:0.3rem;">Numerical Solver:</label>
+                        <select id="vdp-solver" style="padding:0.3rem; border-radius:4px; width:100%;">
+                            <option value="rk4">Runge-Kutta 4th Order (RK4)</option>
+                            <option value="rk5">Runge-Kutta 5th Order (RK5)</option>
+                            <option value="velocity_verlet">Velocity Verlet</option>
+                            <option value="symplectic_euler">Symplectic (Semi-Implicit) Euler</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Time Step ($dt$): <strong id="vdp-dt-val">0.02</strong> s</label>
+                        <input type="range" id="vdp-dt" min="0.001" max="0.1" step="0.001" value="0.02">
+                    </div>
+                    <div class="control-group">
+                        <label>Number of Pendulums: <strong id="vdp-count-val">1</strong></label>
+                        <input type="range" id="vdp-count" min="1" max="15" step="1" value="1">
+                    </div>
+
                     <div style="margin-bottom: 1rem;">
                         <label style="font-weight:bold; display:block; margin-bottom:0.3rem;">Graph Mode:</label>
                         <select id="vdp-graph-mode" style="padding:0.3rem; border-radius:4px; width:100%;">
@@ -2369,8 +2408,8 @@
                 </div>
                 
                 <div class="sim-canvas-wrap" style="flex: 2; min-width: 400px; display:flex; flex-direction:column; gap:1rem;">
-                    <canvas id="vib-dp-canvas" width="600" height="400" style="background:#ffffff; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1); width:100%; height:auto;"></canvas>
-                    <canvas id="vib-dp-graph" width="600" height="250" style="background:#ffffff; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1); width:100%; height:auto;"></canvas>
+                    <canvas id="vib-dp-canvas" width="800" height="600" style="background:#ffffff; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1); width:100%; height:auto;"></canvas>
+                    <canvas id="vib-dp-graph" width="800" height="300" style="background:#ffffff; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1); width:100%; height:auto;"></canvas>
                 </div>
             </div>
         <div class="theory-section" style="margin-bottom: 2rem;">
@@ -2501,9 +2540,356 @@
 
             </section>
 
-</main>
 
-    <script src="app.js?v=4"></script>
+        <!-- ================= LINEAR ALGEBRA INDEX ================= -->
+        <section id="page-linalg-index" class="page">
+            <div class="page-header">
+                <h1>Chapter 3: Linear Algebra</h1>
+                <p>Interactive visualizations of vectors, spaces, matrices, and transformations.</p>
+            </div>
+            <div class="card-grid" id="linalg-index-list">
+                <!-- Javascript will populate this list -->
+            </div>
+        </section>
+
+        <!-- ================= LA 1: VECTORS & VECTOR SPACES ================= -->
+        <section id="page-la-vectors" class="page page-section">
+            <div class="hero">
+                <h1>Vectors & Vector Spaces</h1>
+                <p class="lead">Drag the vectors to explore addition, scalar multiplication, and geometric interpretation.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <h3>Vector Operations</h3>
+                    <div style="margin-bottom: 1rem; color:#475569; font-size:0.9rem;">
+                        <span style="color:#2563eb; font-weight:bold;">Blue Vector (u)</span> &nbsp;|&nbsp; 
+                        <span style="color:#dc2626; font-weight:bold;">Red Vector (v)</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>u.x: <strong id="la-v-ux-val">3.0</strong></label>
+                        <input type="range" id="la-v-ux" min="-8" max="8" step="0.5" value="3.0">
+                    </div>
+                    <div class="control-group">
+                        <label>u.y: <strong id="la-v-uy-val">2.0</strong></label>
+                        <input type="range" id="la-v-uy" min="-8" max="8" step="0.5" value="2.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>v.x: <strong id="la-v-vx-val">-2.0</strong></label>
+                        <input type="range" id="la-v-vx" min="-8" max="8" step="0.5" value="-2.0">
+                    </div>
+                    <div class="control-group">
+                        <label>v.y: <strong id="la-v-vy-val">4.0</strong></label>
+                        <input type="range" id="la-v-vy" min="-8" max="8" step="0.5" value="4.0">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Scalar Multiplier ($\alpha$): <strong id="la-v-alpha-val">1.5</strong></label>
+                        <input type="range" id="la-v-alpha" min="-3" max="3" step="0.1" value="1.5">
+                    </div>
+                    <div style="margin-top:1rem;">
+                        <label class="checkbox-label"><input type="checkbox" id="la-v-show-sum" checked> Show Vector Addition (u + v)</label>
+                        <label class="checkbox-label"><input type="checkbox" id="la-v-show-para" checked> Show Parallelogram</label>
+                        <label class="checkbox-label"><input type="checkbox" id="la-v-show-scale" checked> Show Scalar Mult. ($\alpha$u)</label>
+                    </div>
+                    
+                    <div style="margin-top:1rem;">
+                        <h4>Vector Space Axioms</h4>
+                        <div id="la-v-axioms" style="display:grid; grid-template-columns:1fr; gap:0.3rem;"></div>
+                    </div>
+                </div>
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff;">
+                    <canvas id="la-v-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LA 2: LINEAR COMBINATIONS ================= -->
+        <section id="page-la-lincombo" class="page page-section">
+            <div class="hero">
+                <h1>Linear Combinations & Span</h1>
+                <p class="lead">Adjust scalars $c_1$ and $c_2$ to form the linear combination $c_1 v_1 + c_2 v_2$.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                        <button class="btn" id="la-lc-btn-2d" style="flex:1;">2D View</button>
+                        <button class="btn" id="la-lc-btn-3d" style="flex:1; background:#64748b;">3D View</button>
+                    </div>
+
+                    <div id="la-lc-2d-controls">
+                        <div class="control-group">
+                            <label>v1.x: <strong id="la-lc-v1x-val">2.0</strong></label>
+                            <input type="range" id="la-lc-v1x" min="-5" max="5" step="0.5" value="2.0">
+                        </div>
+                        <div class="control-group">
+                            <label>v1.y: <strong id="la-lc-v1y-val">1.0</strong></label>
+                            <input type="range" id="la-lc-v1y" min="-5" max="5" step="0.5" value="1.0">
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>v2.x: <strong id="la-lc-v2x-val">-1.0</strong></label>
+                            <input type="range" id="la-lc-v2x" min="-5" max="5" step="0.5" value="-1.0">
+                        </div>
+                        <div class="control-group">
+                            <label>v2.y: <strong id="la-lc-v2y-val">2.0</strong></label>
+                            <input type="range" id="la-lc-v2y" min="-5" max="5" step="0.5" value="2.0">
+                        </div>
+                        
+                        <label class="checkbox-label" style="margin-top:1rem;"><input type="checkbox" id="la-lc-show-span" checked> Highlight Span Area</label>
+                        <label class="checkbox-label"><input type="checkbox" id="la-lc-show-components" checked> Show Components</label>
+                    
+                    <hr style="margin:1.5rem 0;">
+                    <div class="control-group">
+                        <label>$c_1$ (Multiplier for $v_1$): <strong id="la-lc-c1-val">1.0</strong></label>
+                        <input type="range" id="la-lc-c1" min="-5" max="5" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <label>$c_2$ (Multiplier for $v_2$): <strong id="la-lc-c2-val">1.0</strong></label>
+                        <input type="range" id="la-lc-c2" min="-5" max="5" step="0.1" value="1.0">
+                    </div>
+                    <div style="margin-top:1.5rem; padding:1rem; background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; text-align:center;">
+                        <strong>Resulting Vector:</strong><br>
+                        <span id="la-lc-result" style="font-size:1.2rem; font-weight:bold; color:#10b981; display:inline-block; margin-top:0.5rem;">[0, 0]</span>
+                    </div>
+</div>
+                    
+                    <div id="la-lc-3d-controls" style="display:none;">
+                        <p style="font-size:0.85rem; color:#64748b; margin-bottom:1rem;">Drag to rotate the 3D scene. Try setting both vectors to lie on the same plane!</p>
+                        
+                        <div class="control-group">
+                            <label>v1.x, v1.y, v1.z</label>
+                            <div style="display:flex; gap:0.2rem;">
+                                <input type="number" id="la-lc3d-v1x" value="2" step="0.5" style="width:100%">
+                                <input type="number" id="la-lc3d-v1y" value="0" step="0.5" style="width:100%">
+                                <input type="number" id="la-lc3d-v1z" value="1" step="0.5" style="width:100%">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>v2.x, v2.y, v2.z</label>
+                            <div style="display:flex; gap:0.2rem;">
+                                <input type="number" id="la-lc3d-v2x" value="0" step="0.5" style="width:100%">
+                                <input type="number" id="la-lc3d-v2y" value="2" step="0.5" style="width:100%">
+                                <input type="number" id="la-lc3d-v2z" value="0" step="0.5" style="width:100%">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label>v3.x, v3.y, v3.z</label>
+                            <div style="display:flex; gap:0.2rem;">
+                                <input type="number" id="la-lc3d-v3x" value="1" step="0.5" style="width:100%">
+                                <input type="number" id="la-lc3d-v3y" value="1" step="0.5" style="width:100%">
+                                <input type="number" id="la-lc3d-v3z" value="2" step="0.5" style="width:100%">
+                            </div>
+                        </div>                        
+                        <hr style="margin:1.5rem 0;">
+                        <div class="control-group">
+                            <label>$c_1$ (Multiplier for $v_1$): <strong id="la-lc3d-c1-val">1.0</strong></label>
+                            <input type="range" id="la-lc3d-c1" min="-5" max="5" step="0.1" value="1.0">
+                        </div>
+                        <div class="control-group">
+                            <label>$c_2$ (Multiplier for $v_2$): <strong id="la-lc3d-c2-val">1.0</strong></label>
+                            <input type="range" id="la-lc3d-c2" min="-5" max="5" step="0.1" value="1.0">
+                        </div>
+                        <div class="control-group">
+                            <label>$c_3$ (Multiplier for $v_3$): <strong id="la-lc3d-c3-val">1.0</strong></label>
+                            <input type="range" id="la-lc3d-c3" min="-5" max="5" step="0.1" value="1.0">
+                        </div>
+                        <label class="checkbox-label" style="margin-top:1rem;"><input type="checkbox" id="la-lc3d-show-span" checked> Draw Spanned Plane</label>
+                        <label class="checkbox-label"><input type="checkbox" id="la-lc3d-show-result" checked> Show Result Vector</label>
+                        <div style="margin-top:1rem; padding:0.5rem; background:#f1f5f9; border-radius:4px; font-size:0.9rem;">
+                            <strong>Span:</strong> <span id="la-lc3d-span-label" style="font-weight:bold;">Plane (Dim = 2)</span><br>
+                            <strong style="color:#9333ea;">Result (c₁v₁ + c₂v₂ + c₃v₃):</strong> <br><span id="la-lc3d-result" style="font-weight:bold; color:#9333ea;">( 0.00, 0.00, 0.00 )</span>
+                        </div>
+                    </div>
+
+                    </div>
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff; position:relative;">
+                    <canvas id="la-lc-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
+                    <div id="la-lc-3d-container" style="width:100%; height:480px; display:none;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LA 3: NORMS ================= -->
+        <section id="page-la-norms" class="page page-section">
+            <div class="hero">
+                <h1>Norms & Unit Balls</h1>
+                <p class="lead">Explore the geometry of different distance metrics (L1, L2, L-infinity) by visualizing their unit balls.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <h3>Lp Norm</h3>
+                    <div class="control-group">
+                        <label>$p$ value: <strong id="la-nm-p-val">2.0</strong></label>
+                        <input type="range" id="la-nm-p" min="0.1" max="10" step="0.1" value="2.0">
+                        <p style="font-size:0.8rem; color:#64748b; margin-top:0.5rem;">$p=1$ (Manhattan), $p=2$ (Euclidean), $p=10$ (approx. Chebyshev)</p>
+                    </div>
+                    <label class="checkbox-label" style="margin-top:1rem;"><input type="checkbox" id="la-nm-show-all" checked> Show L1, L2, and L∞ reference balls</label>
+                </div>
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff;">
+                    <canvas id="la-nm-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LA 4: TRANSFORMS ================= -->
+        <section id="page-la-transforms" class="page page-section">
+            <div class="hero">
+                <h1>Linear Transformations</h1>
+                <p class="lead">Watch a 2D grid warp dynamically as you change the entries of a 2x2 matrix.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <h3>2x2 Transformation Matrix</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; background:#f8fafc; padding:1rem; border-radius:4px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                        <input type="number" id="la-tr-a" value="1" step="0.1" style="text-align:center;">
+                        <input type="number" id="la-tr-b" value="0" step="0.1" style="text-align:center;">
+                        <input type="number" id="la-tr-c" value="0" step="0.1" style="text-align:center;">
+                        <input type="number" id="la-tr-d" value="1" step="0.1" style="text-align:center;">
+                    </div>
+                    <h4>Presets</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                        <button class="btn" id="la-tr-preset-ident">Identity</button>
+                        <button class="btn" id="la-tr-preset-rot45">Rotate 45&deg;</button>
+                        <button class="btn" id="la-tr-preset-rot90">Rotate 90&deg;</button>
+                        <button class="btn" id="la-tr-preset-shear">Shear</button>
+                        <button class="btn" id="la-tr-preset-scale">Scale 2x</button>
+                        <button class="btn" id="la-tr-preset-reflect">Reflect Y</button>
+                    </div>
+                </div>
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff;">
+                    <canvas id="la-tr-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LA 5: MULTIPLY ================= -->
+        <section id="page-la-multiply" class="page page-section">
+            <div class="hero">
+                <h1>Matrix Multiplication</h1>
+                <p class="lead">Visualize matrix multiplication $AB$ as the composition of two geometric transformations: first apply $B$, then apply $A$.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1rem;">
+                        <div style="flex:1;">
+                            <h4 style="margin-top:0; color:#2563eb;">Matrix A</h4>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.2rem;">
+                                <input type="number" id="la-mul-a11" value="0" step="0.1" style="color:#2563eb; background:#eff6ff; font-weight:bold; text-align:center;"><input type="number" id="la-mul-a12" value="-1" step="0.1" style="color:#2563eb; background:#eff6ff; font-weight:bold; text-align:center;">
+                                <input type="number" id="la-mul-a21" value="1" step="0.1" style="color:#2563eb; background:#eff6ff; font-weight:bold; text-align:center;"><input type="number" id="la-mul-a22" value="0" step="0.1" style="color:#2563eb; background:#eff6ff; font-weight:bold; text-align:center;">
+                            </div>
+                        </div>
+                        <div style="flex:1;">
+                            <h4 style="margin-top:0; color:#dc2626;">Matrix B</h4>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.2rem;">
+                                <input type="number" id="la-mul-b11" value="1" step="0.1" style="color:#dc2626; background:#fef2f2; font-weight:bold; text-align:center;"><input type="number" id="la-mul-b12" value="1" step="0.1" style="color:#dc2626; background:#fef2f2; font-weight:bold; text-align:center;">
+                                <input type="number" id="la-mul-b21" value="0" step="0.1" style="color:#dc2626; background:#fef2f2; font-weight:bold; text-align:center;"><input type="number" id="la-mul-b22" value="1" step="0.1" style="color:#dc2626; background:#fef2f2; font-weight:bold; text-align:center;">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align:center; padding:1rem; background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px;">
+                        <h4 style="margin-top:0; color:#10b981;">Result AB</h4>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.2rem; width:150px; margin:0 auto; font-weight:bold; font-size:1.2rem;" id="la-mul-result">
+                            <div>0</div><div>-1</div><div>1</div><div>1</div>
+                        </div>
+                    </div>
+                    <button class="btn" id="la-mul-play" style="width:100%; margin-top:1rem; background:#3b82f6;">▶ Play Composition Animation</button>
+                    <button class="btn" id="la-mul-reset" style="width:100%; margin-top:0.5rem; background:#64748b;">Reset Grid</button>
+                </div>
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff;">
+                    <canvas id="la-mul-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LA 6: DETERMINANTS ================= -->
+        <section id="page-la-determinant" class="page page-section">
+            <div class="hero">
+                <h1>Determinants</h1>
+                <p class="lead">See how a matrix scales area (2D) or volume (3D).</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                        <button class="btn" id="la-det-mode-2d" style="flex:1;">2D Area</button>
+                        <button class="btn" id="la-det-mode-3d" style="flex:1; background:#64748b;">3D Volume</button>
+                    </div>
+                    <div id="la-det-2d-inputs">
+                        <h3>2x2 Matrix</h3>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; background:#f8fafc; padding:1rem; border-radius:4px; border:1px solid #e2e8f0;">
+                            <input type="number" id="la-det-a11" value="2" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-a12" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-a21" value="0.5" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-a22" value="1.5" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        </div>
+                    </div>
+                    <div id="la-det-3d-inputs" style="display:none;">
+                        <h3>3x3 Matrix</h3>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0.5rem; background:#f8fafc; padding:1rem; border-radius:4px; border:1px solid #e2e8f0;">
+                            <input type="number" id="la-det-m11" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m12" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m13" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m21" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m22" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m23" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m31" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m32" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                            <input type="number" id="la-det-m33" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        </div>
+                    </div>
+                    <div style="margin-top:1.5rem; padding:1rem; background:#1e293b; color:#fff; border-radius:4px; text-align:center;">
+                        <div style="font-size:0.9rem; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.3rem;">Determinant</div>
+                        <div id="la-det-value" style="font-size:2.5rem; font-weight:bold; font-family:monospace;">2.50</div>
+                        <div id="la-det-message" style="margin-top:0.5rem; font-size:0.85rem; font-weight:bold; color:#4ade80;">Positive Orientation</div>
+                    </div>
+                </div>
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff; position:relative;" id="la-det-canvas-container">
+                    <canvas id="la-det-canvas-2d" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
+                    <div id="la-det-canvas-3d" style="width:100%; height:480px; display:none;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LA 7: INVERSE MATRICES ================= -->
+        <section id="page-la-inverse" class="page page-section">
+            <div class="hero">
+                <h1>Inverse Matrices</h1>
+                <p class="lead">Undo a transformation. See what happens when the determinant is zero!</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <h3>Matrix A</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; background:#f8fafc; padding:1rem; border-radius:4px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                        <input type="number" id="la-inv-a11" value="2" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-inv-a12" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-inv-a21" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-inv-a22" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                    </div>
+                    
+                    <div style="padding:0.8rem; background:#f1f5f9; border-radius:4px; margin-bottom:1.5rem; font-size:0.9rem;">
+                        <strong>det(A) = </strong> <span id="la-inv-det">1.00</span>
+                    </div>
+
+                    <button class="btn" id="la-inv-btn-apply" style="width:100%; margin-bottom:0.5rem; background:#3b82f6;">Apply A</button>
+                    <button class="btn" id="la-inv-btn-undo" style="width:100%; margin-bottom:1.5rem; background:#8b5cf6;">Undo (Apply A⁻¹)</button>
+                    
+                    <hr style="margin:1rem 0;border-top:1px solid var(--border);">
+                    <button class="btn" id="la-inv-preset-collapse" style="width:100%; background:#ef4444;">Set det(A) = 0</button>
+                    <p style="font-size:0.8rem; color:#64748b; margin-top:0.5rem; text-align:center;">Try undoing a non-invertible matrix!</p>
+                </div>
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff;">
+                    <canvas id="la-inv-canvas" width="600" height="480" style="display:block; width:100%; height:auto;"></canvas>
+                </div>
+            </div>
+        </section>
+
+</main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="linear_algebra.js?v=20"></script>
+    <script src="app.js?v=20"></script>
     <script src="practice_1.js"></script>
     <script src="practice_2.js"></script>
     <script src="vibrations.js"></script>

@@ -7,6 +7,7 @@
 const chapterSelect = document.getElementById('chapter-select');
 const navKinematics = document.getElementById('nav-kinematics');
 const navVibrations = document.getElementById('nav-vibrations');
+const navLinalg     = document.getElementById('nav-linalg');
 const sidebarTitle = document.getElementById('sidebar-title');
 
 if (chapterSelect) {
@@ -15,14 +16,22 @@ if (chapterSelect) {
         if (chapter === 'kinematics') {
             if(navKinematics) navKinematics.style.display = 'block';
             if(navVibrations) navVibrations.style.display = 'none';
+            if(navLinalg)     navLinalg.style.display     = 'none';
             if(sidebarTitle) sidebarTitle.innerText = "Kinematics";
             document.querySelector('[data-page="kinematics-index"]').click();
         } else if (chapter === 'vibrations') {
             if(navKinematics) navKinematics.style.display = 'none';
             if(navVibrations) navVibrations.style.display = 'block';
+            if(navLinalg)     navLinalg.style.display     = 'none';
             if(sidebarTitle) sidebarTitle.innerText = "Vibrations & Waves";
             document.querySelector('[data-page="vibrations-index"]').click();
-        }
+        } else if (chapter === 'linalg') {
+            if(navKinematics) navKinematics.style.display = 'none';
+            if(navVibrations) navVibrations.style.display = 'none';
+            if(navLinalg)     navLinalg.style.display     = 'block';
+            if(sidebarTitle) sidebarTitle.innerText = "Linear Algebra";
+            document.querySelector('[data-page="linalg-index"]').click();
+}
     });
 }
 
@@ -76,6 +85,18 @@ function buildIndexPages() {
     
     if (kinList) kinList.innerHTML = kinTopics.map(createCard).join('');
     if (vibList) vibList.innerHTML = vibTopics.map(createCard).join('');
+    const linalgTopics = [
+        { id: 'la-vectors',  title: 'Vectors & Vector Spaces',   desc: 'Drag vectors on an interactive grid. Explore addition, scalar multiplication, and verify the eight axioms of a real vector space.' },
+        { id: 'la-lincombo', title: 'Linear Combinations',       desc: 'Adjust scalars c₁ and c₂ with sliders to form c₁v₁ + c₂v₂. The shaded region dynamically shows the span of the two vectors.' },
+        { id: 'la-norms',    title: 'Norms & Unit Balls',        desc: 'Watch the unit ball morph between L¹ (diamond), L² (circle), and L∞ (square) as you drag the p-slider. Drag a test point to read off all four norms.' },
+        { id: 'la-transforms', title: 'Linear Transformations',  desc: 'Watch a 2D grid dynamically warp as you change the entries of a 2x2 matrix. Try rotation, shear, scale, and reflection presets.' },
+        { id: 'la-multiply',   title: 'Matrix Multiplication',   desc: 'Visualize matrix multiplication as the composition of two transformations. Watch the grid warp under B, then warp again under A.' },
+        { id: 'la-determinant',title: 'Determinants',            desc: 'See how a matrix scales area (2D) or volume (3D). Watch the unit square turn into a parallelogram, and notice the sign flip when orientation changes.' },
+        { id: 'la-inverse',    title: 'Inverse Matrices',        desc: 'Undo a matrix transformation and watch the grid return to normal. See what happens when the determinant is zero and the grid collapses!' }
+    ];
+    const linalgList = document.getElementById('linalg-index-list');
+    if (linalgList) linalgList.innerHTML = linalgTopics.map(createCard).join('');
+
 }
 
 document.addEventListener('DOMContentLoaded', buildIndexPages);
@@ -116,7 +137,15 @@ document.querySelectorAll('.nav-link').forEach(link => {
         if (link.dataset.page === 'vib-tubes') { if(window.initVibTubes) initVibTubes(); }
         if (link.dataset.page === 'vib-em') { if(window.initVibEM) initVibEM(); }
         if (link.dataset.page === 'vib-double-pendulum') { if(window.initVibDoublePendulum) initVibDoublePendulum(); }
-    });
+  
+        if (link.dataset.page === 'la-vectors')  { if(window.initLinAlg) initLAVectors(); }
+        if (link.dataset.page === 'la-lincombo') { if(window.initLinAlg) initLALinCombo(); }
+        if (link.dataset.page === 'la-norms')    { if(window.initLinAlg) initLANorms(); }
+        if (link.dataset.page === 'la-transforms') { if(window.initLinAlg) initLATransforms(); }
+        if (link.dataset.page === 'la-multiply') { if(window.initLinAlg) initLAMultiply(); }
+        if (link.dataset.page === 'la-determinant') { if(window.initLinAlg) initLADeterminants(); }
+        if (link.dataset.page === 'la-inverse') { if(window.initLinAlg) initLAInverse(); }
+        if (link.dataset.page === 'linalg-index') { /* nothing to init */ }  });
 });
 
 // ═══════════════ MATH TABS ═══════════════
