@@ -2933,7 +2933,11 @@
                 <div class="theory-pane active" style="margin-top: 2rem;">
                     <h4>Mathematics of the Determinant</h4>
                     <p>The determinant of a matrix represents the <strong>scaling factor</strong> of the linear transformation. In 2D, it describes how much the area of a region increases or decreases. In 3D, it describes the change in volume.</p>
+                    <p>For a $2 \times 2$ matrix, the formula is:</p>
                     <div class="eq-block result">$$ \det\left(\begin{bmatrix} a & b \\ c & d \end{bmatrix}\right) = ad - bc $$</div>
+                    <p>For an $n \times n$ matrix, it is generally calculated using the <strong>Laplace Expansion</strong> (cofactor expansion) along any row or column. For example, expanding along the $i$-th row:</p>
+                    <div class="eq-block result">$$ \det(A) = \sum_{j=1}^n (-1)^{i+j} a_{ij} M_{ij} $$</div>
+                    <p>where $M_{ij}$ is the determinant of the $(n-1) \times (n-1)$ submatrix formed by deleting the $i$-th row and $j$-th column.</p>
                     <ul>
                         <li><strong>$\det > 1$:</strong> Space is stretched outward.</li>
                         <li><strong>$\det = 1$:</strong> Area is preserved (e.g., pure rotations or shears).</li>
@@ -2978,10 +2982,10 @@
         
                 <div class="theory-pane active" style="margin-top: 2rem;">
                     <h4>Mathematics of the Inverse Matrix</h4>
-                    <p>The inverse of a matrix $A$, denoted $A^{-1}$, is the unique matrix that perfectly undoes the transformation applied by $A$, returning space back to its original state (the Identity matrix $I$).</p>
-                    <div class="eq-block result">$$ A^{-1} A = A A^{-1} = I = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} $$</div>
-                    <p>For a $2 \times 2$ matrix, the formula is:</p>
-                    <div class="eq-block result">$$ A^{-1} = \frac{1}{\det(A)} \begin{bmatrix} d & -b \\ -c & a \end{bmatrix} $$</div>
+                    <p>The inverse of an $n \times n$ matrix $A$, denoted $A^{-1}$, is the unique matrix that perfectly undoes the transformation applied by $A$, returning space back to its original state (the $n \times n$ Identity matrix $I$).</p>
+                    <div class="eq-block result">$$ A^{-1} A = A A^{-1} = I = \begin{bmatrix} 1 & 0 & \cdots & 0 \\ 0 & 1 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & 1 \end{bmatrix} $$</div>
+                    <p>The generalized formula for $A^{-1}$ uses the <strong>adjugate matrix</strong> (the transpose of the cofactor matrix $C$) divided by the determinant:</p>
+                    <div class="eq-block result">$$ A^{-1} = \frac{1}{\det(A)} \text{adj}(A) = \frac{1}{\det(A)} C^T $$</div>
                     <p>Notice the $1/\det(A)$ term. If $\det(A) = 0$, the transformation has crushed space into a lower dimension. Because multiple distinct points get crushed onto the same single point, it is impossible to know where they originally came from. Information is destroyed, meaning the inverse <strong>does not exist</strong>.</p>
                 </div>
         </section>
