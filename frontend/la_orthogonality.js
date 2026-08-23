@@ -39,6 +39,9 @@ window.initLAOrthogonality = function () {
         const axesHelper = new THREE.AxesHelper(5);
         scene.add(axesHelper);
 
+        const gridHelper = new THREE.GridHelper(10, 10, 0x94a3b8, 0xe2e8f0);
+        scene.add(gridHelper);
+
         rowGroup = new THREE.Group(); scene.add(rowGroup);
         nullGroup = new THREE.Group(); scene.add(nullGroup);
         colGroup = new THREE.Group(); scene.add(colGroup);
