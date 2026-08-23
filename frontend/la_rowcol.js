@@ -136,7 +136,7 @@ window.initLARowCol = function () {
         }
     }
 
-    window.laRowColUpdate = function update() {
+    function update() {
         if (!colRenderer) init3D();
         
         const a11 = parseFloat(document.getElementById('la-rc-a11').value) || 0;
@@ -186,6 +186,7 @@ window.initLARowCol = function () {
         drawSpan(colGroup, c1, c2, c3, rankC);
         drawSpan(rowGroup, r1, r2, r3, rankR);
     }
+    window.laRowColUpdate = update;
 
     function setMatrix(m) {
         document.getElementById('la-rc-a11').value = m[0];
