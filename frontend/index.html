@@ -2851,6 +2851,17 @@
                     <p>Algebraically, the element in the $i$-th row and $j$-th column of the resulting matrix $C$ is the dot product of the $i$-th row of $A$ and the $j$-th column of $B$:</p>
                     <div class="eq-block result">$$ C_{ij} = \sum_{k=1}^n A_{ik} B_{kj} $$</div>
                     <p>Because composing transformations is not necessarily commutative (rotating then shearing is different from shearing then rotating), matrix multiplication is non-commutative: $AB \neq BA$.</p>
+                    
+                    <h5 style="margin-top: 1.5rem;">The Four Perspectives of Matrix Multiplication</h5>
+                    <p>Depending on the context, it is extremely useful to view the multiplication $C = AB$ in four different ways:</p>
+                    <ol>
+                        <li><strong>The Dot Product Way (Row $\times$ Column):</strong> The standard algorithmic method. Each entry $C_{ij}$ is the dot product of the $i$-th row of $A$ and the $j$-th column of $B$.</li>
+                        <li><strong>The Column Way (Linear Combinations):</strong> Every column of $C$ is a linear combination of the <em>columns of $A$</em>. The weights are provided by the corresponding column of $B$.</li>
+                        <li><strong>The Row Way:</strong> Every row of $C$ is a linear combination of the <em>rows of $B$</em>. The weights are provided by the corresponding row of $A$.</li>
+                        <li><strong>The Outer Product Way (Sum of Rank-1 Matrices):</strong> $C$ is the sum of separate rank-1 matrices, formed by the outer product of the $k$-th column of $A$ and the $k$-th row of $B$: 
+                            <div class="eq-block result">$$ C = (\text{col } 1 \text{ of } A)(\text{row } 1 \text{ of } B) + \dots + (\text{col } n \text{ of } A)(\text{row } n \text{ of } B) $$</div>
+                        </li>
+                    </ol>
                 </div>
         </section>
 
