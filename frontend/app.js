@@ -145,6 +145,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
         if (link.dataset.page === 'la-multiply') { if(window.initLinAlg) initLAMultiply(); }
         if (link.dataset.page === 'la-determinant') { if(window.initLinAlg) initLADeterminants(); }
         if (link.dataset.page === 'la-inverse') { if(window.initLinAlg) initLAInverse(); }
+        if (link.dataset.page === 'la-rowcol') { if(window.initLinAlg) initLARowCol(); }
         if (link.dataset.page === 'linalg-index') { /* nothing to init */ }  });
 });
 

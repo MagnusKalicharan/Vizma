@@ -74,6 +74,7 @@
             <li><a href="#" class="nav-link" data-page="la-multiply"><span class="nav-num">05</span> Matrix Multiply</a></li>
             <li><a href="#" class="nav-link" data-page="la-determinant"><span class="nav-num">06</span> Determinants</a></li>
             <li><a href="#" class="nav-link" data-page="la-inverse"><span class="nav-num">07</span> Inverse Matrices</a></li>
+            <li><a href="#" class="nav-link" data-page="la-rowcol"><span class="nav-num">08</span> Row Space / Column Space</a></li>
         </ul>
     </nav>
 
@@ -2990,10 +2991,74 @@
                 </div>
         </section>
 
+        <!-- ================= LA 8: ROW SPACE / COLUMN SPACE ================= -->
+        <section id="page-la-rowcol" class="page page-section">
+            <div class="hero">
+                <h1>Row Space & Column Space</h1>
+                <p class="lead">Visualize how the row rank always equals the column rank.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <h3>Matrix A</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0.5rem; background:#f8fafc; padding:1rem; border-radius:4px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                        <input type="number" id="la-rc-a11" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-rc-a12" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-rc-a13" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        
+                        <input type="number" id="la-rc-a21" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-rc-a22" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-rc-a23" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        
+                        <input type="number" id="la-rc-a31" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-rc-a32" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-rc-a33" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                    </div>
+                    
+                    <button class="btn" id="la-rc-btn-update" style="width:100%; margin-bottom:1.5rem; background:#3b82f6;">Update Spaces</button>
+                    
+                    <hr style="margin:1rem 0;border-top:1px solid var(--border);">
+                    <h4>Presets</h4>
+                    <button class="btn" id="la-rc-btn-rank1" style="width:100%; margin-bottom:0.5rem; background:#8b5cf6;">Rank 1 (Lines)</button>
+                    <button class="btn" id="la-rc-btn-rank2" style="width:100%; margin-bottom:0.5rem; background:#10b981;">Rank 2 (Planes)</button>
+                    <button class="btn" id="la-rc-btn-rank3" style="width:100%; margin-bottom:0.5rem; background:#f59e0b;">Rank 3 (Volumes)</button>
+                    
+                    <div style="margin-top:1.5rem; padding:1rem; background:#1e293b; color:#fff; border-radius:4px; text-align:center;">
+                        <div style="font-size:0.9rem; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.3rem;">Rank of A</div>
+                        <div id="la-rc-rank-val" style="font-size:2.5rem; font-weight:bold; font-family:monospace;">3</div>
+                    </div>
+                </div>
+                
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff; display:flex; flex-direction:column;">
+                    <div style="flex:1; border-bottom:1px solid #e2e8f0; position:relative;">
+                        <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.8); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1;">Column Space $C(A)$</div>
+                        <div id="la-rc-col-canvas" style="width:100%; height:300px;"></div>
+                    </div>
+                    <div style="flex:1; position:relative;">
+                        <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.8); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1;">Row Space $C(A^T)$</div>
+                        <div id="la-rc-row-canvas" style="width:100%; height:300px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="theory-pane active" style="margin-top: 2rem;">
+                <h4>Mathematics of the Column and Row Spaces</h4>
+                <p>The <strong>Column Space</strong>, denoted $C(A)$, is the span of the column vectors of matrix $A$. Geometrically, this is the entire space of all possible outputs $Ax$ when transforming a vector $x$.</p>
+                <div class="eq-block result">$$ C(A) = \text{span}(A_1, A_2, \dots, A_n) $$</div>
+                
+                <p>The <strong>Row Space</strong>, denoted $C(A^T)$, is the span of the row vectors of matrix $A$. It represents the space of all vectors that are not completely crushed to zero by the transformation.</p>
+                <div class="eq-block result">$$ C(A^T) = \text{span}(A_1^*, A_2^*, \dots, A_m^*) $$</div>
+                
+                <p>The <strong>Fundamental Theorem of Linear Algebra</strong> reveals a stunning, beautiful symmetry: no matter how strange or rectangular a matrix is, the dimension of its Column Space is <em>always exactly equal</em> to the dimension of its Row Space.</p>
+                <div class="eq-block result">$$ \dim(C(A)) = \dim(C(A^T)) = \text{Rank}(A) $$</div>
+                <p>Try the Rank 1 and Rank 2 preset buttons. Notice how when the Column Space collapses into a 2D plane or a 1D line, the Row Space miraculously collapses into a plane or line alongside it in perfect synchrony!</p>
+            </div>
+        </section>
+
 </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="linear_algebra.js?v=20"></script>
+    <script src="la_rowcol.js"></script>
     <script src="app.js?v=20"></script>
     <script src="practice_1.js"></script>
     <script src="practice_2.js"></script>
