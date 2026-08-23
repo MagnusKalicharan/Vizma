@@ -75,6 +75,7 @@
             <li><a href="#" class="nav-link" data-page="la-determinant"><span class="nav-num">06</span> Determinants</a></li>
             <li><a href="#" class="nav-link" data-page="la-inverse"><span class="nav-num">07</span> Inverse Matrices</a></li>
             <li><a href="#" class="nav-link" data-page="la-rowcol"><span class="nav-num">08</span> Row Space / Column Space</a></li>
+            <li><a href="#" class="nav-link" data-page="la-nullspace"><span class="nav-num">09</span> Null Space</a></li>
         </ul>
     </nav>
 
@@ -3054,12 +3055,64 @@
             </div>
         </section>
 
+        <!-- ================= LA 9: NULL SPACE ================= -->
+        <section id="page-la-nullspace" class="page page-section">
+            <div class="hero">
+                <h1>Null Space (Kernel)</h1>
+                <p class="lead">Visualize vectors that "vanish" under transformation by collapsing into the origin.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <h3>Transformation Matrix A</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0.5rem; background:#f8fafc; padding:1rem; border-radius:4px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                        <input type="number" id="la-ns-a11" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-ns-a12" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-ns-a13" value="-1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        
+                        <input type="number" id="la-ns-a21" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-ns-a22" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-ns-a23" value="-1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        
+                        <input type="number" id="la-ns-a31" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-ns-a32" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-ns-a33" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                    </div>
+                    
+                    <button class="btn" id="la-ns-btn-transform" style="width:100%; margin-bottom:0.5rem; background:#ef4444;">Apply Transformation</button>
+                    <button class="btn" id="la-ns-btn-reset" style="width:100%; margin-bottom:1.5rem; background:#64748b;">Reset View</button>
+                    
+                    <hr style="margin:1rem 0;border-top:1px solid var(--border);">
+                    <h4>Presets</h4>
+                    <button class="btn" id="la-ns-btn-preset1" style="width:100%; margin-bottom:0.5rem; background:#8b5cf6;">1D Null Space (Line)</button>
+                    <button class="btn" id="la-ns-btn-preset2" style="width:100%; margin-bottom:0.5rem; background:#10b981;">2D Null Space (Plane)</button>
+                    <button class="btn" id="la-ns-btn-preset3" style="width:100%; margin-bottom:0.5rem; background:#f59e0b;">0D Null Space (Origin Only)</button>
+                </div>
+                
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff; position:relative;">
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.8); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1;">Null Space Visualization</div>
+                    <div id="la-ns-canvas" style="width:100%; height:100%; min-height:480px;"></div>
+                </div>
+            </div>
+            
+            <div class="theory-pane active" style="margin-top: 2rem;">
+                <h4>Mathematics of the Null Space</h4>
+                <p>The <strong>Null Space</strong> (also called the Kernel), denoted $N(A)$, is the set of all vectors $x$ that "vanish" under the linear transformation $A$. In other words, they are crushed into the origin.</p>
+                <div class="eq-block result">$$ N(A) = \{ x \in \mathbb{R}^n \mid Ax = 0 \} $$</div>
+                
+                <p>Vectors in the Null Space don't just get smaller; they perfectly evaluate to the zero vector. If you click <strong>Apply Transformation</strong> above, watch how the vectors lying on the yellow geometry (the Null Space) collapse precisely to $(0,0,0)$, while other vectors survive and form the Column Space.</p>
+                
+                <p>This reveals the famous <strong>Rank-Nullity Theorem</strong>: every dimension in your input space must either survive to become part of the Column Space (Rank), or be destroyed and sent to zero (Nullity). They always add up to the total dimensions ($n$).</p>
+                <div class="eq-block result">$$ \text{Rank}(A) + \text{Nullity}(A) = n $$</div>
+            </div>
+        </section>
+
 </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="linear_algebra.js?v=22"></script>
-    <script src="la_rowcol.js?v=22"></script>
-    <script src="app.js?v=22"></script>
+    <script src="linear_algebra.js?v=23"></script>
+    <script src="la_rowcol.js?v=23"></script>
+    <script src="la_nullspace.js?v=23"></script>
+    <script src="app.js?v=23"></script>
     <script src="practice_1.js"></script>
     <script src="practice_2.js"></script>
     <script src="vibrations.js"></script>
