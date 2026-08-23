@@ -3352,19 +3352,40 @@
                         <div class="eq-block result" style="margin: 0.5rem 0; padding: 0.5rem; font-size:1rem;">$$ A \vec{v} = \lambda \vec{v} $$</div>
                     </div>
                 </div>
+
+                <div style="margin-top:2rem;">
+                    <h5 style="color:#334155;">How to Calculate Eigenvalues &amp; Eigenvectors</h5>
+                    <p>For any general square matrix $A$, finding its eigenvalues and eigenvectors is a two-step algebraic process.</p>
+                    
+                    <div style="background:#f8fafc; padding:1.5rem; border-radius:4px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                        <strong style="color:#0f172a; font-size:1.1rem;">Step 1: Find the Eigenvalues ($\lambda$)</strong>
+                        <p>We start with the defining equation: $A \vec{v} = \lambda \vec{v}$. We can rewrite this by factoring out $\vec{v}$ using the Identity matrix $I$:</p>
+                        <div class="eq-block" style="margin: 0.5rem 0; padding: 0.5rem;">$$ (A - \lambda I) \vec{v} = \vec{0} $$</div>
+                        <p>For this equation to have a non-zero solution for $\vec{v}$, the matrix $(A - \lambda I)$ must squish space down to a lower dimension (meaning it has a null space). This only happens if its determinant is exactly zero. This gives us the <b>Characteristic Equation</b>:</p>
+                        <div class="eq-block result" style="margin: 0.5rem 0; padding: 0.5rem; font-size:1.1rem;">$$ \det(A - \lambda I) = 0 $$</div>
+                        <p>Expanding the determinant of a $2 \times 2$ matrix gives a quadratic equation in terms of $\lambda$: $\lambda^2 - \text{tr}(A)\lambda + \det(A) = 0$. Solving this polynomial gives the eigenvalues $\lambda_1, \lambda_2$.</p>
+                    </div>
+
+                    <div style="background:#f8fafc; padding:1.5rem; border-radius:4px; border:1px solid #e2e8f0;">
+                        <strong style="color:#0f172a; font-size:1.1rem;">Step 2: Find the Eigenvectors ($\vec{v}$)</strong>
+                        <p>Once you have a specific eigenvalue $\lambda_i$, you plug it back into the shifted matrix equation:</p>
+                        <div class="eq-block" style="margin: 0.5rem 0; padding: 0.5rem;">$$ (A - \lambda_i I) \vec{v} = \begin{bmatrix} 0 \\ 0 \end{bmatrix} $$</div>
+                        <p>This is now a standard system of linear equations (like finding a Null Space). You solve for the components of $\vec{v}$. Any vector that satisfies this equation (and any scaled multiple of it) is an eigenvector for that specific $\lambda_i$.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
 </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="linear_algebra.js?v=32"></script>
-    <script src="la_rowcol.js?v=32"></script>
-    <script src="la_nullspace.js?v=32"></script>
-    <script src="la_orthogonality.js?v=32"></script>
-    <script src="la_axb.js?v=32"></script>
-    <script src="la_eigen.js?v=32"></script>
-    <script src="app.js?v=32"></script>
+    <script src="linear_algebra.js?v=33"></script>
+    <script src="la_rowcol.js?v=33"></script>
+    <script src="la_nullspace.js?v=33"></script>
+    <script src="la_orthogonality.js?v=33"></script>
+    <script src="la_axb.js?v=33"></script>
+    <script src="la_eigen.js?v=33"></script>
+    <script src="app.js?v=33"></script>
     <script src="practice_1.js"></script>
     <script src="practice_2.js"></script>
     <script src="vibrations.js"></script>

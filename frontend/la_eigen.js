@@ -45,8 +45,13 @@ window.initLAEigen = function () {
         transformGroup.matrixAutoUpdate = false;
         scene.add(transformGroup);
         
-        buildGrid();
-        buildSampleVectors();
+        // Build static background ghost trace
+        buildGrid(scene, 0xe2e8f0, 0.4); 
+        buildSampleVectors(scene, 0x94a3b8, 0.3);
+
+        // Build dynamic transformable elements
+        buildGrid(transformGroup, 0xcbd5e1, 0.8);
+        buildSampleVectors(transformGroup, 0x3b82f6, 1.0);
         
         eigenLinesGroup = new THREE.Group();
         transformGroup.add(eigenLinesGroup);
@@ -54,7 +59,7 @@ window.initLAEigen = function () {
         animate();
     }
     
-    function buildGrid() {
+    function buildGrid(parent, colorHex, opacity) {
         const size = 10;
         const step = 1;
         const geom = new THREE.BufferGeometry();
@@ -64,24 +69,30 @@ window.initLAEigen = function () {
             pts.push(new THREE.Vector3(i, -size, 0), new THREE.Vector3(i, size, 0));
         }
         geom.setFromPoints(pts);
-        const mat = new THREE.LineBasicMaterial({ color: 0xcbd5e1, transparent:true, opacity: 0.5 });
+        const mat = new THREE.LineBasicMaterial({ color: colorHex, transparent:true, opacity: opacity });
         const grid = new THREE.LineSegments(geom, mat);
-        transformGroup.add(grid);
+        parent.add(grid);
     }
     
-    function buildSampleVectors() {
+    function buildSampleVectors(parent, colorHex, opacity) {
         const numVecs = 8;
         for (let i = 0; i < numVecs; i++) {
             const theta = (i / numVecs) * Math.PI * 2;
             const dir = new THREE.Vector3(Math.cos(theta), Math.sin(theta), 0);
-            const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(), 1.5, 0x3b82f6, 0.2, 0.15);
-            transformGroup.add(arrow);
+            
+            // ArrowHelper doesn't directly support opacity well without drilling down, so we'll just set it
+            const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(), 1.5, colorHex, 0.2, 0.15);
+            if (opacity < 1.0) {
+                arrow.line.material.transparent = true; arrow.line.material.opacity = opacity;
+                arrow.cone.material.transparent = true; arrow.cone.material.opacity = opacity;
+            }
+            parent.add(arrow);
         }
         
         // A single circle outline to see the shear clearly
         const circleGeom = new THREE.RingGeometry(1.48, 1.52, 64);
-        const circleMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8, side: THREE.DoubleSide });
-        transformGroup.add(new THREE.Mesh(circleGeom, circleMat));
+        const circleMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent:true, opacity: Math.min(1.0, opacity+0.2), side: THREE.DoubleSide });
+        parent.add(new THREE.Mesh(circleGeom, circleMat));
     }
 
     function getMatrix() {
