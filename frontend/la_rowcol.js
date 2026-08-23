@@ -1,8 +1,15 @@
 /* la_rowcol.js */
+window.laRowColInitialized = false;
+
 window.initLARowCol = function () {
-    let initialized = false;
-    let colRenderer, colScene, colCamera, colControls;
-    let rowRenderer, rowScene, rowCamera, rowControls;
+    if (window.laRowColInitialized) {
+        if (window.laRowColUpdate) window.laRowColUpdate();
+        return;
+    }
+    window.laRowColInitialized = true;
+
+    let colRenderer, colScene, colCamera, colControls, colGroup;
+    let rowRenderer, rowScene, rowCamera, rowControls, rowGroup;
 
     const colCanvas = document.getElementById('la-rc-col-canvas');
     const rowCanvas = document.getElementById('la-rc-row-canvas');
@@ -10,7 +17,7 @@ window.initLARowCol = function () {
     if (!colCanvas || !rowCanvas) return;
 
     function init3D() {
-        if (initialized) return;
+        if (colRenderer) return;
 
         // Init Column Space
         colRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -43,7 +50,11 @@ window.initLARowCol = function () {
         rowScene.add(ambientLight.clone());
         rowScene.add(dirLight.clone());
 
-        initialized = true;
+        colGroup = new THREE.Group();
+        colScene.add(colGroup);
+        
+        rowGroup = new THREE.Group();
+        rowScene.add(rowGroup);
 
         animate();
     }
@@ -125,8 +136,8 @@ window.initLARowCol = function () {
         }
     }
 
-    function update() {
-        init3D();
+    window.laRowColUpdate = function update() {
+        if (!colRenderer) init3D();
         
         const a11 = parseFloat(document.getElementById('la-rc-a11').value) || 0;
         const a12 = parseFloat(document.getElementById('la-rc-a12').value) || 0;
@@ -148,27 +159,32 @@ window.initLARowCol = function () {
         const r2 = new THREE.Vector3(a21, a22, a23);
         const r3 = new THREE.Vector3(a31, a32, a33);
 
-        colScene.children = colScene.children.filter(c => c.isLight);
-        rowScene.children = rowScene.children.filter(c => c.isLight);
+        // Clear groups properly
+        while(colGroup.children.length > 0){ 
+            colGroup.remove(colGroup.children[0]); 
+        }
+        while(rowGroup.children.length > 0){ 
+            rowGroup.remove(rowGroup.children[0]); 
+        }
 
-        colScene.add(createAxes());
-        rowScene.add(createAxes());
+        colGroup.add(createAxes());
+        rowGroup.add(createAxes());
 
-        colScene.add(createArrow(c1, 0xdc2626)); // Red
-        colScene.add(createArrow(c2, 0x16a34a)); // Green
-        colScene.add(createArrow(c3, 0x2563eb)); // Blue
+        colGroup.add(createArrow(c1, 0xdc2626)); // Red
+        colGroup.add(createArrow(c2, 0x16a34a)); // Green
+        colGroup.add(createArrow(c3, 0x2563eb)); // Blue
 
-        rowScene.add(createArrow(r1, 0xdc2626));
-        rowScene.add(createArrow(r2, 0x16a34a));
-        rowScene.add(createArrow(r3, 0x2563eb));
+        rowGroup.add(createArrow(r1, 0xdc2626));
+        rowGroup.add(createArrow(r2, 0x16a34a));
+        rowGroup.add(createArrow(r3, 0x2563eb));
 
         const rankC = calcRank(c1, c2, c3);
         const rankR = calcRank(r1, r2, r3); 
         
         document.getElementById('la-rc-rank-val').innerText = rankC;
 
-        drawSpan(colScene, c1, c2, c3, rankC);
-        drawSpan(rowScene, r1, r2, r3, rankR);
+        drawSpan(colGroup, c1, c2, c3, rankC);
+        drawSpan(rowGroup, r1, r2, r3, rankR);
     }
 
     function setMatrix(m) {
@@ -220,13 +236,13 @@ window.initLARowCol = function () {
 
     // Initialize dimensions and render
     setTimeout(() => {
-        if (!initialized) init3D();
+        if (!colRenderer) init3D();
         update();
     }, 100);
     
     // Add window resize handling
     window.addEventListener('resize', () => {
-        if (initialized) {
+        if (colRenderer) {
             colCamera.aspect = colCanvas.clientWidth / colCanvas.clientHeight;
             colCamera.updateProjectionMatrix();
             colRenderer.setSize(colCanvas.clientWidth, colCanvas.clientHeight);
