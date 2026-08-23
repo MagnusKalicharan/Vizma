@@ -29,7 +29,7 @@ window.initLANullSpace = function () {
         canvasWrap.appendChild(renderer.domElement);
         
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1e293b); // Dark background
+        scene.background = new THREE.Color(0xffffff); // White background
         
         camera = new THREE.PerspectiveCamera(45, canvasWrap.clientWidth / canvasWrap.clientHeight, 0.1, 100);
         camera.position.set(6, 4, 8);
@@ -43,7 +43,7 @@ window.initLANullSpace = function () {
         scene.add(ambientLight);
         scene.add(dirLight);
 
-        const gridHelper = new THREE.GridHelper(10, 10, 0x475569, 0x334155);
+        const gridHelper = new THREE.GridHelper(10, 10, 0x94a3b8, 0xe2e8f0);
         scene.add(gridHelper);
         
         const axesHelper = new THREE.AxesHelper(5);
@@ -58,10 +58,27 @@ window.initLANullSpace = function () {
         animate(0);
     }
 
-    function createPoint(color, size) {
-        const geom = new THREE.SphereGeometry(size, 16, 16);
-        const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.5 });
-        return new THREE.Mesh(geom, mat);
+    function addVector(pos, matrix, isNullSpace) {
+        const len = pos.length();
+        if (len < 0.001) return;
+
+        let color = new THREE.Color();
+        if (isNullSpace) {
+            color.setHex(0xf59e0b); // Amber for null space
+        } else {
+            // Rainbow coloring based on angle in xy plane + z
+            const hue = (Math.atan2(pos.y, pos.x) + Math.PI) / (2 * Math.PI);
+            color.setHSL(hue, 0.8, 0.5);
+        }
+
+        const dir = pos.clone().normalize();
+        const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0,0,0), len, color.getHex(), 0.2, 0.15);
+        pointsGroup.add(arrow);
+        
+        originalPoints.push(pos.clone());
+        let tPos = pos.clone().applyMatrix4(matrix);
+        transformedPoints.push(tPos);
+        pointMeshes.push(arrow);
     }
 
     function generatePoints(matrix, nullSpaceType, nullSpaceDir) {
@@ -70,46 +87,37 @@ window.initLANullSpace = function () {
         transformedPoints = [];
         pointMeshes = [];
 
-        for (let x = -2; x <= 2; x++) {
-            for (let y = -2; y <= 2; y++) {
-                for (let z = -2; z <= 2; z++) {
+        // Generate a grid of background vectors
+        for (let x = -2; x <= 2; x += 2) {
+            for (let y = -2; y <= 2; y += 2) {
+                for (let z = -2; z <= 2; z += 2) {
                     if (x===0 && y===0 && z===0) continue;
-                    addPoint(new THREE.Vector3(x, y, z), 0x94a3b8, 0.05, matrix);
+                    addVector(new THREE.Vector3(x, y, z), matrix, false);
                 }
             }
         }
 
-        if (nullSpaceType === 1) { 
-            for (let t = -4; t <= 4; t += 0.5) {
+        // Add special vectors ON the null space
+        if (nullSpaceType === 1) { // 1D line
+            for (let t = -4; t <= 4; t += 1) {
                 if (t === 0) continue;
                 let pt = nullSpaceDir.clone().multiplyScalar(t);
-                addPoint(pt, 0xfacc15, 0.1, matrix); 
+                addVector(pt, matrix, true);
             }
-        } else if (nullSpaceType === 2) { 
+        } else if (nullSpaceType === 2) { // 2D plane
             let u = new THREE.Vector3(1,0,0);
             if (Math.abs(nullSpaceDir.x) > 0.9) u.set(0,1,0);
             let v1 = new THREE.Vector3().crossVectors(nullSpaceDir, u).normalize();
             let v2 = new THREE.Vector3().crossVectors(nullSpaceDir, v1).normalize();
             
-            for (let i = -3; i <= 3; i++) {
-                for (let j = -3; j <= 3; j++) {
-                    if (i === 0 && j === 0) continue;
+            for (let i = -2; i <= 2; i+=1.5) {
+                for (let j = -2; j <= 2; j+=1.5) {
+                    if (Math.abs(i) < 0.1 && Math.abs(j) < 0.1) continue;
                     let pt = v1.clone().multiplyScalar(i).add(v2.clone().multiplyScalar(j));
-                    addPoint(pt, 0xfacc15, 0.08, matrix);
+                    addVector(pt, matrix, true);
                 }
             }
         }
-    }
-
-    function addPoint(pos, color, size, matrix) {
-        const mesh = createPoint(color, size);
-        mesh.position.copy(pos);
-        pointsGroup.add(mesh);
-        
-        originalPoints.push(pos.clone());
-        let tPos = pos.clone().applyMatrix4(matrix);
-        transformedPoints.push(tPos);
-        pointMeshes.push(mesh);
     }
 
     function buildNullSpaceGeometry(nullSpaceType, nullSpaceDir) {
@@ -198,7 +206,19 @@ window.initLANullSpace = function () {
         const ease = t * t * (3 - 2 * t); 
         
         for (let i = 0; i < pointMeshes.length; i++) {
-            pointMeshes[i].position.copy(originalPoints[i]).lerp(transformedPoints[i], ease);
+            let currentPos = originalPoints[i].clone().lerp(transformedPoints[i], ease);
+            let len = currentPos.length();
+            
+            if (len < 0.001) {
+                pointMeshes[i].visible = false;
+            } else {
+                pointMeshes[i].visible = true;
+                pointMeshes[i].setDirection(currentPos.clone().normalize());
+                // For very short vectors, scale down the head
+                let headL = Math.min(0.2, len * 0.5);
+                let headW = Math.min(0.15, len * 0.3);
+                pointMeshes[i].setLength(len, headL, headW);
+            }
         }
         
         if (nsGroup.children.length > 0) {
