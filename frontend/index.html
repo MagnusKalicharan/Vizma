@@ -2853,15 +2853,31 @@
                     <p>Because composing transformations is not necessarily commutative (rotating then shearing is different from shearing then rotating), matrix multiplication is non-commutative: $AB \neq BA$.</p>
                     
                     <h5 style="margin-top: 1.5rem;">The Four Perspectives of Matrix Multiplication</h5>
-                    <p>Depending on the context, it is extremely useful to view the multiplication $C = AB$ in four different ways:</p>
-                    <ol>
-                        <li><strong>The Dot Product Way (Row $\times$ Column):</strong> The standard algorithmic method. Each entry $C_{ij}$ is the dot product of the $i$-th row of $A$ and the $j$-th column of $B$.</li>
-                        <li><strong>The Column Way (Linear Combinations):</strong> Every column of $C$ is a linear combination of the <em>columns of $A$</em>. The weights are provided by the corresponding column of $B$.</li>
-                        <li><strong>The Row Way:</strong> Every row of $C$ is a linear combination of the <em>rows of $B$</em>. The weights are provided by the corresponding row of $A$.</li>
-                        <li><strong>The Outer Product Way (Sum of Rank-1 Matrices):</strong> $C$ is the sum of separate rank-1 matrices, formed by the outer product of the $k$-th column of $A$ and the $k$-th row of $B$: 
-                            <div class="eq-block result">$$ C = (\text{col } 1 \text{ of } A)(\text{row } 1 \text{ of } B) + \dots + (\text{col } n \text{ of } A)(\text{row } n \text{ of } B) $$</div>
-                        </li>
-                    </ol>
+                    <p>Depending on the context, it is extremely useful to view the multiplication $C = AB$ (where $A$ is $m \times n$ and $B$ is $n \times p$) in four different ways:</p>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <strong>1. The Dot Product Way (Row $\times$ Column)</strong>
+                        <p style="margin: 0.5rem 0;">The standard algorithmic method. Each entry $C_{ij}$ is the dot product of the $i$-th row of $A$ and the $j$-th column of $B$.</p>
+                        <div class="eq-block result">$$ C_{ij} = \begin{bmatrix} a_{i1} & a_{i2} & \cdots & a_{in} \end{bmatrix} \begin{bmatrix} b_{1j} \\ b_{2j} \\ \vdots \\ b_{nj} \end{bmatrix} = \sum_{k=1}^n a_{ik} b_{kj} $$</div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <strong>2. The Column Way (Linear Combinations)</strong>
+                        <p style="margin: 0.5rem 0;">Every column of $C$ is a linear combination of the <em>columns of $A$</em>. The weights are provided by the corresponding column of $B$.</p>
+                        <div class="eq-block result">$$ C_j = A B_j = \begin{bmatrix} | & | & & | \\ A_1 & A_2 & \cdots & A_n \\ | & | & & | \end{bmatrix} \begin{bmatrix} b_{1j} \\ b_{2j} \\ \vdots \\ b_{nj} \end{bmatrix} = b_{1j}A_1 + b_{2j}A_2 + \dots + b_{nj}A_n $$</div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <strong>3. The Row Way</strong>
+                        <p style="margin: 0.5rem 0;">Every row of $C$ is a linear combination of the <em>rows of $B$</em>. The weights are provided by the corresponding row of $A$.</p>
+                        <div class="eq-block result">$$ C_i^* = A_i^* B = \begin{bmatrix} a_{i1} & a_{i2} & \cdots & a_{in} \end{bmatrix} \begin{bmatrix} - & B_1^* & - \\ - & B_2^* & - \\ & \vdots & \\ - & B_n^* & - \end{bmatrix} = a_{i1}B_1^* + a_{i2}B_2^* + \dots + a_{in}B_n^* $$</div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <strong>4. The Outer Product Way (Sum of Rank-1 Matrices)</strong>
+                        <p style="margin: 0.5rem 0;">$C$ is the sum of $n$ separate rank-1 matrices, formed by the outer product of the $k$-th column of $A$ and the $k$-th row of $B$.</p>
+                        <div class="eq-block result">$$ C = \sum_{k=1}^n A_k B_k^* = \begin{bmatrix} | \\ A_1 \\ | \end{bmatrix} \begin{bmatrix} - B_1^* - \end{bmatrix} + \dots + \begin{bmatrix} | \\ A_n \\ | \end{bmatrix} \begin{bmatrix} - B_n^* - \end{bmatrix} $$</div>
+                    </div>
                 </div>
         </section>
 
