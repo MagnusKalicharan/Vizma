@@ -188,7 +188,7 @@ window.initLAOrthogonality = function () {
         }
         
         while(arrowsGroup.children.length > 0) arrowsGroup.remove(arrowsGroup.children[0]);
-        document.getElementById('la-orth-math-result').innerHTML = '$v_r \\cdot v_n = ?$';
+        document.getElementById('la-orth-math-result').innerHTML = 'v<sub>r</sub> &middot; v<sub>n</sub> = ?';
         
         updateVisibility();
     };
