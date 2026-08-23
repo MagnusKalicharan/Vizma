@@ -76,6 +76,7 @@
             <li><a href="#" class="nav-link" data-page="la-inverse"><span class="nav-num">07</span> Inverse Matrices</a></li>
             <li><a href="#" class="nav-link" data-page="la-rowcol"><span class="nav-num">08</span> Row Space / Column Space</a></li>
             <li><a href="#" class="nav-link" data-page="la-nullspace"><span class="nav-num">09</span> Null Space</a></li>
+            <li><a href="#" class="nav-link" data-page="la-orthogonality"><span class="nav-num">10</span> Orthogonal Subspaces</a></li>
         </ul>
     </nav>
 
@@ -3106,13 +3107,87 @@
             </div>
         </section>
 
+        <!-- ================= LA 10: ORTHOGONALITY ================= -->
+        <section id="page-la-orthogonality" class="page page-section">
+            <div class="hero">
+                <h1>The Four Fundamental Subspaces</h1>
+                <p class="lead">Visualize how the Row Space and Null Space are orthogonal complements, as are the Column Space and Left Null Space.</p>
+            </div>
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem;">
+                <div class="sim-controls" style="flex: 1; min-width: 300px;">
+                    <h3>Transformation Matrix A</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0.5rem; background:#f8fafc; padding:1rem; border-radius:4px; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                        <input type="number" id="la-orth-a11" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-orth-a12" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-orth-a13" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        
+                        <input type="number" id="la-orth-a21" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-orth-a22" value="1" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-orth-a23" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        
+                        <input type="number" id="la-orth-a31" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-orth-a32" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                        <input type="number" id="la-orth-a33" value="0" step="0.1" style="text-align:center; width:100%; box-sizing:border-box;">
+                    </div>
+
+                    <h4>Visibility Toggles</h4>
+                    <div style="display:grid; grid-template-columns: 1fr; gap:0.5rem; margin-bottom:1.5rem;">
+                        <label style="display:flex; align-items:center; gap:0.5rem; color:#2563eb; font-weight:bold;">
+                            <input type="checkbox" id="la-orth-show-row" checked> Row Space $C(A^T)$ (Blue)
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.5rem; color:#dc2626; font-weight:bold;">
+                            <input type="checkbox" id="la-orth-show-null" checked> Null Space $N(A)$ (Red)
+                        </label>
+                        <hr style="border:none; border-top:1px solid #e2e8f0; margin:0.25rem 0;">
+                        <label style="display:flex; align-items:center; gap:0.5rem; color:#16a34a; font-weight:bold;">
+                            <input type="checkbox" id="la-orth-show-col"> Column Space $C(A)$ (Green)
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.5rem; color:#9333ea; font-weight:bold;">
+                            <input type="checkbox" id="la-orth-show-leftnull"> Left Null Space $N(A^T)$ (Purple)
+                        </label>
+                    </div>
+
+                    <h4>Dot Product Check</h4>
+                    <p style="font-size:0.9rem; color:#475569; margin-bottom:0.5rem;">Verify orthogonality by picking random vectors $v_r \in C(A^T)$ and $v_n \in N(A)$.</p>
+                    <button class="btn" id="la-orth-btn-check" style="width:100%; margin-bottom:0.5rem; background:#3b82f6;">Test Orthogonality</button>
+                    <div id="la-orth-math-result" style="font-family:monospace; font-size:1.1rem; background:#f1f5f9; padding:0.5rem; text-align:center; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:1.5rem;">
+                        $v_r \cdot v_n = ?$
+                    </div>
+                </div>
+                
+                <div class="sim-canvas-wrap" style="flex: 2; min-width:400px; padding:0; background:#fff; position:relative;">
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.8); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1;">Fundamental Subspaces</div>
+                    <div id="la-orth-canvas" style="width:100%; height:100%; min-height:480px;"></div>
+                </div>
+            </div>
+            
+            <div class="theory-pane active" style="margin-top: 2rem;">
+                <h4>Fundamental Theorem of Linear Algebra (Part 2)</h4>
+                <p>The four fundamental subspaces pair up into two sets of <strong>orthogonal complements</strong>.</p>
+                
+                <div style="display:flex; gap:2rem; flex-wrap:wrap; margin-top:1rem;">
+                    <div style="flex:1; min-width:300px; border-left:4px solid #3b82f6; padding-left:1rem;">
+                        <h5 style="color:#3b82f6;">In the Input Space $\mathbb{R}^n$</h5>
+                        <p>The Row Space $C(A^T)$ and the Null Space $N(A)$ are perfectly orthogonal. Every vector in the row space has a zero dot product with every vector in the null space.</p>
+                        <div class="eq-block result">$$ C(A^T) \perp N(A) $$</div>
+                    </div>
+                    <div style="flex:1; min-width:300px; border-left:4px solid #16a34a; padding-left:1rem;">
+                        <h5 style="color:#16a34a;">In the Output Space $\mathbb{R}^m$</h5>
+                        <p>The Column Space $C(A)$ and the Left Null Space $N(A^T)$ are perfectly orthogonal. Every vector in the column space has a zero dot product with every vector in the left null space.</p>
+                        <div class="eq-block result">$$ C(A) \perp N(A^T) $$</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="linear_algebra.js?v=24"></script>
-    <script src="la_rowcol.js?v=24"></script>
-    <script src="la_nullspace.js?v=24"></script>
-    <script src="app.js?v=24"></script>
+    <script src="linear_algebra.js?v=25"></script>
+    <script src="la_rowcol.js?v=25"></script>
+    <script src="la_nullspace.js?v=25"></script>
+    <script src="la_orthogonality.js?v=25"></script>
+    <script src="app.js?v=25"></script>
     <script src="practice_1.js"></script>
     <script src="practice_2.js"></script>
     <script src="vibrations.js"></script>

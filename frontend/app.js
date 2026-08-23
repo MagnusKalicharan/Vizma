@@ -94,7 +94,8 @@ function buildIndexPages() {
         { id: 'la-determinant',title: 'Determinants',            desc: 'See how a matrix scales area (2D) or volume (3D). Watch the unit square turn into a parallelogram, and notice the sign flip when orientation changes.' },
         { id: 'la-inverse',    title: 'Inverse Matrices',        desc: 'Undo a matrix transformation and watch the grid return to normal. See what happens when the determinant is zero and the grid collapses!' },
         { id: 'la-rowcol',     title: 'Row Space / Column Space', desc: 'Visualize how the row rank always equals the column rank by watching both 3D spaces collapse simultaneously.' },
-        { id: 'la-nullspace',  title: 'Null Space',              desc: 'Visualize vectors that vanish. Watch lines and planes collapse directly into the origin under a transformation.' }
+        { id: 'la-nullspace',  title: 'Null Space',              desc: 'Visualize vectors that vanish. Watch lines and planes collapse directly into the origin under a transformation.' },
+        { id: 'la-orthogonality', title: 'Orthogonal Subspaces', desc: 'See all Four Fundamental Subspaces in one scene and verify that the Row Space and Null Space are perfectly orthogonal.' }
     ];
     const linalgList = document.getElementById('linalg-index-list');
     if (linalgList) linalgList.innerHTML = linalgTopics.map(createCard).join('');
@@ -149,6 +150,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
         if (link.dataset.page === 'la-inverse') { if(window.initLinAlg) initLAInverse(); }
         if (link.dataset.page === 'la-rowcol') { if(window.initLinAlg) initLARowCol(); }
         if (link.dataset.page === 'la-nullspace') { if(window.initLinAlg) initLANullSpace(); }
+        if (link.dataset.page === 'la-orthogonality') { if(window.initLinAlg) initLAOrthogonality(); }
         if (link.dataset.page === 'linalg-index') { /* nothing to init */ }  });
 });
 
