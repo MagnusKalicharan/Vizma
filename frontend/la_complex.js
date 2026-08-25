@@ -8,13 +8,11 @@ window.initLAComplex = function () {
     }
     window.laComplexInitialized = true;
 
-    const canvasRoots = document.getElementById('la-cx-canvas-roots');
     const canvasPhase = document.getElementById('la-cx-canvas-phase');
     const canvasTower = document.getElementById('la-cx-canvas-tower');
     
-    if (!canvasRoots || !canvasPhase || !canvasTower) return;
+    if (!canvasPhase || !canvasTower) return;
     
-    const ctxRoots = canvasRoots.getContext('2d');
     const ctxPhase = canvasPhase.getContext('2d');
     const ctxTower = canvasTower.getContext('2d');
     
@@ -33,10 +31,8 @@ window.initLAComplex = function () {
     
     const regimeBox = document.getElementById('la-cx-regime-box');
     const regimeLabel = document.getElementById('la-cx-regime-label');
-    const wrapRoots = document.getElementById('la-cx-wrap-roots');
     const wrapPhase = document.getElementById('la-cx-wrap-phase');
     const wrapTower = document.getElementById('la-cx-wrap-tower');
-    const readoutRoots = document.getElementById('la-cx-readout-roots');
 
     // Simulation state
     let state = {
@@ -166,7 +162,6 @@ window.initLAComplex = function () {
         if (ghostTrail.length > 30) ghostTrail.shift();
 
         // Render
-        drawRoots(eigen);
         drawPhase(eigen);
         drawTower(p.L);
     }
@@ -174,96 +169,28 @@ window.initLAComplex = function () {
     function updateUI(eigen) {
         let color = '';
         let label = '';
-        let readout = '';
         
         if (eigen.beta === 0) {
             color = '#7c3aed'; // Purple
             label = 'Undamped';
-            readout = `\u03BB = \u00B1 ${eigen.imag.toFixed(2)}i`;
         } else if (eigen.type === 'complex') {
             color = '#2563eb'; // Blue
             label = 'Underdamped';
-            readout = `\u03BB = ${eigen.real.toFixed(2)} \u00B1 ${eigen.imag.toFixed(2)}i`;
         } else if (eigen.type === 'critical') {
             color = '#059669'; // Green
             label = 'Critically Damped';
-            readout = `\u03BB = ${eigen.r1.toFixed(2)} (repeated)`;
         } else {
             color = '#d97706'; // Amber
             label = 'Overdamped';
-            readout = `\u03BB\u2081 = ${eigen.r1.toFixed(2)}, \u03BB\u2082 = ${eigen.r2.toFixed(2)}`;
         }
 
         regimeLabel.innerText = label;
         regimeLabel.style.color = color;
         regimeBox.style.borderColor = color;
-        wrapRoots.style.borderColor = color;
         wrapPhase.style.borderColor = color;
         wrapTower.style.borderColor = color;
-        readoutRoots.innerText = readout;
     }
 
-    function drawRoots(eigen) {
-        let w = canvasRoots.width;
-        let h = canvasRoots.height;
-        let cx = w / 2;
-        let cy = h / 2;
-        // Scale to comfortably fit values up to ~10
-        let scale = 25; 
-
-        ctxRoots.clearRect(0, 0, w, h);
-
-        // Shaded regions
-        ctxRoots.fillStyle = 'rgba(239, 68, 68, 0.1)'; // Red right half (Unstable, technically inaccessible here since c>=0)
-        ctxRoots.fillRect(cx, 0, w/2, h);
-        ctxRoots.fillStyle = 'rgba(34, 197, 94, 0.1)'; // Green left half
-        ctxRoots.fillRect(0, 0, cx, h);
-
-        // Axes
-        ctxRoots.strokeStyle = '#cbd5e1';
-        ctxRoots.lineWidth = 1;
-        ctxRoots.beginPath();
-        ctxRoots.moveTo(0, cy); ctxRoots.lineTo(w, cy); // Real
-        ctxRoots.moveTo(cx, 0); ctxRoots.lineTo(cx, h); // Imag
-        ctxRoots.stroke();
-        
-        ctxRoots.fillStyle = '#64748b';
-        ctxRoots.font = '10px Arial';
-        ctxRoots.fillText("Re", w - 20, cy - 5);
-        ctxRoots.fillText("Im", cx + 5, 15);
-
-        // Draw dots
-        ctxRoots.fillStyle = '#0f172a';
-        if (eigen.type === 'real' || eigen.type === 'critical') {
-            let x1 = cx + eigen.r1 * scale;
-            let x2 = cx + eigen.r2 * scale;
-            
-            // If critical, they overlap. Draw slightly offset visually or just one bigger dot
-            if (eigen.type === 'critical') {
-                ctxRoots.beginPath(); ctxRoots.arc(x1, cy, 7, 0, Math.PI*2); ctxRoots.fill();
-                ctxRoots.strokeStyle = '#fff'; ctxRoots.lineWidth = 2; ctxRoots.stroke();
-            } else {
-                ctxRoots.beginPath(); ctxRoots.arc(x1, cy, 6, 0, Math.PI*2); ctxRoots.fill();
-                ctxRoots.beginPath(); ctxRoots.arc(x2, cy, 6, 0, Math.PI*2); ctxRoots.fill();
-            }
-        } else {
-            let x = cx + eigen.real * scale;
-            let y1 = cy - eigen.imag * scale;
-            let y2 = cy + eigen.imag * scale;
-            
-            ctxRoots.beginPath(); ctxRoots.arc(x, y1, 6, 0, Math.PI*2); ctxRoots.fill();
-            ctxRoots.beginPath(); ctxRoots.arc(x, y2, 6, 0, Math.PI*2); ctxRoots.fill();
-            
-            // Connect pair with dashed line
-            ctxRoots.strokeStyle = '#94a3b8';
-            ctxRoots.lineWidth = 2;
-            ctxRoots.setLineDash([4, 4]);
-            ctxRoots.beginPath();
-            ctxRoots.moveTo(x, y1); ctxRoots.lineTo(x, y2);
-            ctxRoots.stroke();
-            ctxRoots.setLineDash([]);
-        }
-    }
 
     function drawPhase(eigen) {
         let w = canvasPhase.width;
