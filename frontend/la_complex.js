@@ -33,6 +33,7 @@ window.initLAComplex = function () {
     const regimeLabel = document.getElementById('la-cx-regime-label');
     const wrapPhase = document.getElementById('la-cx-wrap-phase');
     const wrapTower = document.getElementById('la-cx-wrap-tower');
+    const readoutPhase = document.getElementById('la-cx-readout-phase');
 
     // Simulation state
     let state = {
@@ -169,19 +170,24 @@ window.initLAComplex = function () {
     function updateUI(eigen) {
         let color = '';
         let label = '';
+        let readout = '';
         
         if (eigen.beta === 0) {
             color = '#7c3aed'; // Purple
             label = 'Undamped';
+            readout = `\u03BB = \u00B1 ${eigen.imag.toFixed(2)}i`;
         } else if (eigen.type === 'complex') {
             color = '#2563eb'; // Blue
             label = 'Underdamped';
+            readout = `\u03BB = ${eigen.real.toFixed(2)} \u00B1 ${eigen.imag.toFixed(2)}i`;
         } else if (eigen.type === 'critical') {
             color = '#059669'; // Green
             label = 'Critically Damped';
+            readout = `\u03BB = ${eigen.r1.toFixed(2)} (repeated)`;
         } else {
             color = '#d97706'; // Amber
             label = 'Overdamped';
+            readout = `\u03BB\u2081 = ${eigen.r1.toFixed(2)}, \u03BB\u2082 = ${eigen.r2.toFixed(2)}`;
         }
 
         regimeLabel.innerText = label;
@@ -189,6 +195,7 @@ window.initLAComplex = function () {
         regimeBox.style.borderColor = color;
         wrapPhase.style.borderColor = color;
         wrapTower.style.borderColor = color;
+        if (readoutPhase) readoutPhase.innerText = readout;
     }
 
 
