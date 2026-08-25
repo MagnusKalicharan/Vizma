@@ -3411,58 +3411,139 @@
         <section id="page-la-complex" class="page page-section">
             <div class="hero">
                 <h1>Complex Eigenvalues in Real Life</h1>
-                <p class="lead">See why oscillatory wobble is mathematically required to stabilize an inverted pendulum.</p>
+                <p class="lead">Discover how the eigenvalues of a damped pendulum's state matrix physically determine oscillatory motion.</p>
             </div>
             
-            <div class="sim-section" style="display:flex; flex-direction:column; gap:1rem;">
+            <div class="sim-section" style="display:flex; flex-wrap:wrap; gap:1rem; align-items: stretch;">
                 
-                <!-- Controls Row -->
-                <div class="sim-controls" style="display:flex; align-items:center; gap:2rem; padding:1rem; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg);">
-                    <div style="flex:1;">
-                        <h4 style="margin-top:0; margin-bottom:0.5rem;">Controller Tuning (Gain &amp; Damping)</h4>
-                        <input type="range" id="la-cx-slider" min="0" max="100" step="1" value="50" style="width:100%;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; font-weight:bold; margin-top:0.3rem;">
-                            <span>Unstable (Falls)</span>
-                            <span>Underdamped (Wobble)</span>
-                            <span>Overdamped (Sluggish)</span>
-                        </div>
+                <!-- Controls Sidebar -->
+                <div class="sim-controls" style="flex: 1; min-width: 280px; max-width: 320px; display:flex; flex-direction:column; gap:1rem;">
+                    <div>
+                        <h4 style="margin-top:0; color:var(--text); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">Pendulum Parameters</h4>
                     </div>
-                    <button class="btn" id="la-cx-btn-reset" style="background:#64748b; white-space:nowrap;">Reset Pendulum</button>
+                    
+                    <div style="background:var(--bg); padding:1rem; border-radius:var(--radius); border:2px solid var(--border); transition: border-color 0.3s;" id="la-cx-regime-box">
+                        <div style="font-size:0.75rem; text-transform:uppercase; font-weight:bold; color:var(--text); opacity:0.7;">Current Regime</div>
+                        <div id="la-cx-regime-label" style="font-size:1.2rem; font-weight:bold; color:var(--primary); margin-top:0.2rem;">Underdamped</div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Damping (c): <strong id="la-cx-val-c">0.50</strong></label>
+                        <input type="range" id="la-cx-slider-c" min="0" max="10" step="0.01" value="0.5">
+                    </div>
+                    <div class="control-group">
+                        <label>Mass (m): <strong id="la-cx-val-m">1.0</strong></label>
+                        <input type="range" id="la-cx-slider-m" min="0.1" max="5" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <label>Length (L): <strong id="la-cx-val-l">1.0</strong></label>
+                        <input type="range" id="la-cx-slider-l" min="0.1" max="5" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <label>Gravity (g): <strong id="la-cx-val-g">9.81</strong></label>
+                        <input type="range" id="la-cx-slider-g" min="1" max="20" step="0.1" value="9.81">
+                    </div>
+                    <div class="control-group">
+                        <label>Initial Angle &theta;&#8320;: <strong id="la-cx-val-th">0.60</strong></label>
+                        <input type="range" id="la-cx-slider-th" min="-3.14" max="3.14" step="0.01" value="0.6">
+                    </div>
+                    
+                    <div style="display:flex; gap:0.5rem; margin-top:auto;">
+                        <button class="btn" id="la-cx-btn-reset" style="flex:1; background:var(--primary);">Reset</button>
+                        <button class="btn" id="la-cx-btn-rand" style="flex:1; background:#64748b;">Random c</button>
+                    </div>
                 </div>
 
-                <!-- 3 Panels Row -->
-                <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items: stretch;">
-                    
-                    <!-- Panel 1: Complex Plane -->
-                    <div class="sim-canvas-wrap" style="flex:1; min-width:300px; padding:0; position:relative; min-height:300px; background:#fff;">
-                        <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Complex Plane (Eigenvalues)</div>
-                        <canvas id="la-cx-canvas-roots" width="400" height="400" style="width:100%; height:100%; display:block;"></canvas>
-                    </div>
+                <!-- 3 Panels Container -->
+                <div style="flex: 3; display:flex; flex-direction:column; gap:1rem; min-width:400px;">
+                    <div style="display:flex; gap:1rem; height:100%;">
+                        
+                        <!-- Panel 1: Complex Plane -->
+                        <div class="sim-canvas-wrap" id="la-cx-wrap-roots" style="flex:1; padding:0; position:relative; background:#fff; border:2px solid var(--border); transition: border-color 0.3s;">
+                            <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.85rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Complex Plane (Eigenvalues)</div>
+                            <div id="la-cx-readout-roots" style="position:absolute; bottom:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-family:monospace; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">&lambda; = ?</div>
+                            <canvas id="la-cx-canvas-roots" width="400" height="400" style="width:100%; height:100%; display:block; min-height:250px;"></canvas>
+                        </div>
 
-                    <!-- Panel 2: Phase Portrait -->
-                    <div class="sim-canvas-wrap" style="flex:1; min-width:300px; padding:0; position:relative; min-height:300px; background:#fff;">
-                        <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Phase Portrait (&theta; vs &theta;&#729;)</div>
-                        <canvas id="la-cx-canvas-phase" width="400" height="400" style="width:100%; height:100%; display:block;"></canvas>
-                    </div>
+                        <!-- Panel 2: Phase Portrait -->
+                        <div class="sim-canvas-wrap" id="la-cx-wrap-phase" style="flex:1; padding:0; position:relative; background:#fff; border:2px solid var(--border); transition: border-color 0.3s;">
+                            <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.85rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Phase Portrait (&theta; vs &theta;&#729;)</div>
+                            <canvas id="la-cx-canvas-phase" width="400" height="400" style="width:100%; height:100%; display:block; min-height:250px;"></canvas>
+                        </div>
 
-                    <!-- Panel 3: Physical Tower -->
-                    <div class="sim-canvas-wrap" style="flex:1; min-width:300px; padding:0; position:relative; min-height:300px; background:#fff;">
-                        <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.9rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Physical Pendulum</div>
-                        <canvas id="la-cx-canvas-tower" width="400" height="400" style="width:100%; height:100%; display:block;"></canvas>
+                        <!-- Panel 3: Physical Tower -->
+                        <div class="sim-canvas-wrap" id="la-cx-wrap-tower" style="flex:1; padding:0; position:relative; background:#fff; border:2px solid var(--border); transition: border-color 0.3s;">
+                            <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.9); padding:4px 8px; font-weight:bold; font-size:0.85rem; border-radius:4px; z-index:10; border:1px solid #cbd5e1; pointer-events:none;">Physical Pendulum</div>
+                            <canvas id="la-cx-canvas-tower" width="400" height="400" style="width:100%; height:100%; display:block; min-height:250px;"></canvas>
+                        </div>
                     </div>
-
                 </div>
             </div>
             
             <div class="theory-pane active" style="margin-top: 2rem;">
-                <h4>The Physics of Stabilization</h4>
-                <p>When engineers try to balance an inherently unstable system (like a rocket, a Segway, or an inverted pendulum), the open-loop eigenvalues are real and positive. This means any tiny perturbation grows exponentially—the tower simply falls over.</p>
-                <p>To fix this, we apply a feedback controller that pushes back. As we crank up the controller gain:</p>
-                <ul>
-                    <li>The positive eigenvalue is pulled toward the left.</li>
-                    <li>Eventually, the two real eigenvalues collide and split vertically off the real axis, becoming a <b>complex conjugate pair</b>.</li>
-                    <li>This complex pair on the left half-plane (negative real part) produces a <b>decaying spiral</b> in the phase portrait. Physically, this means the controller overcorrects slightly, causing the tower to wobble back and forth with decreasing amplitude until it settles perfectly upright.</li>
-                </ul>
+                <h4>Mathematical Derivation: Why Oscillation Requires Complex Eigenvalues</h4>
+                
+                <p>The motion of a damped pendulum (using the small-angle approximation $\sin\theta \approx \theta$) is governed by Newton's Second Law:</p>
+                <div class="eq-block">$$ mL\ddot{\theta} + cL\dot{\theta} + mg\theta = 0 $$</div>
+                <p>Dividing by $mL$ and defining $\beta = \frac{c}{2m}$ and $\omega_0^2 = \frac{g}{L}$, we get a standard second-order ODE:</p>
+                <div class="eq-block result" style="padding:0.5rem; margin-bottom:1.5rem;">$$ \ddot{\theta} + 2\beta\dot{\theta} + \omega_0^2\theta = 0 $$</div>
+
+                <h5 style="color:#334155; margin-top:2rem;">1. State-Space Conversion</h5>
+                <p>To analyze this using linear algebra, we convert the second-order ODE into a system of two first-order ODEs. Let the state vector be $x = [\theta, \dot{\theta}]^T$.</p>
+                <div class="eq-block">$$ \dot{x} = \begin{bmatrix} \dot{\theta} \\ \ddot{\theta} \end{bmatrix} = \begin{bmatrix} 0 & 1 \\ -\omega_0^2 & -2\beta \end{bmatrix} \begin{bmatrix} \theta \\ \dot{\theta} \end{bmatrix} $$</div>
+                <p>This gives us our system matrix $A = \begin{bmatrix} 0 & 1 \\ -\omega_0^2 & -2\beta \end{bmatrix}$.</p>
+
+                <h5 style="color:#334155; margin-top:2rem;">2. Eigenvalue Derivation</h5>
+                <p>The behavior of the system is entirely determined by the eigenvalues of $A$. We find them using the characteristic equation $\det(A - \lambda I) = 0$:</p>
+                <div class="eq-block">$$ \det \begin{bmatrix} -\lambda & 1 \\ -\omega_0^2 & -2\beta-\lambda \end{bmatrix} = (-\lambda)(-2\beta - \lambda) - (1)(-\omega_0^2) = \lambda^2 + 2\beta\lambda + \omega_0^2 = 0 $$</div>
+                <p>Using the quadratic formula, the eigenvalues are:</p>
+                <div class="eq-block result">$$ \lambda = -\beta \pm \sqrt{\beta^2 - \omega_0^2} $$</div>
+
+                <div style="background:#fff7ed; padding:1.5rem; border-left:4px solid #ea580c; margin:2rem 0; border-radius:0 4px 4px 0;">
+                    <strong style="color:#9a3412; font-size:1.1rem; display:block; margin-bottom:0.5rem;">Core Insight</strong>
+                    <p style="margin:0; color:#5c2b14;">A single real eigenvalue can only produce monotonic exponential growth or decay ($e^{\lambda t}$) — it is algebraically incapable of producing a sign change. The moment a physical system needs to cross back through equilibrium (oscillate), Euler's formula forces an imaginary component into the eigenvalue to generate the $\cos$ and $\sin$ terms. <b>Complex eigenvalues aren't optional extra math — they are the unique algebraic signature of oscillatory return-to-equilibrium.</b></p>
+                </div>
+
+                <h5 style="color:#334155; margin-top:2rem;">3. The Three Regimes</h5>
+                <p>The discriminant $\Delta = \beta^2 - \omega_0^2$ determines the nature of the eigenvalues and the physical behavior of the pendulum.</p>
+                
+                <table style="width:100%; border-collapse:collapse; margin-top:1rem; margin-bottom:2rem; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background:#f1f5f9; text-align:left;">
+                            <th style="padding:0.75rem; border-bottom:2px solid #cbd5e1;">Regime</th>
+                            <th style="padding:0.75rem; border-bottom:2px solid #cbd5e1;">Discriminant</th>
+                            <th style="padding:0.75rem; border-bottom:2px solid #cbd5e1;">Eigenvalues</th>
+                            <th style="padding:0.75rem; border-bottom:2px solid #cbd5e1;">Physical Behavior</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0; font-weight:bold; color:#d97706;">Overdamped</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">$\Delta > 0$</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">Real, distinct, negative</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">Returns to equilibrium without oscillating. $\theta(t) = A_1e^{\lambda_1 t} + A_2e^{\lambda_2 t}$</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0; font-weight:bold; color:#059669;">Critically Damped</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">$\Delta = 0$</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">Real, repeated, negative</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">Fastest return without oscillation. $\theta(t) = (A_1 + A_2t)e^{-\beta t}$</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0; font-weight:bold; color:#2563eb;">Underdamped</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">$\Delta < 0$</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">Complex conjugate pair</td>
+                            <td style="padding:0.75rem; border-bottom:1px solid #e2e8f0;">Decaying oscillation (wobble). $\theta(t) = Re^{-\beta t}\cos(\omega_d t - \phi)$</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:0.75rem; font-weight:bold; color:#7c3aed;">Undamped</td>
+                            <td style="padding:0.75rem;">$\beta = 0$</td>
+                            <td style="padding:0.75rem;">Pure imaginary ($\pm i\omega_0$)</td>
+                            <td style="padding:0.75rem;">Perpetual oscillation (closed orbit). $\theta(t) = R\cos(\omega_0 t - \phi)$</td>
+                        </tr>
+                    </tbody>
+                </table>
+
             </div>
         </section>
 
@@ -3475,7 +3556,7 @@
     <script src="la_orthogonality.js?v=36"></script>
     <script src="la_axb.js?v=36"></script>
     <script src="la_eigen.js?v=36"></script>
-    <script src="la_complex.js?v=36"></script>
+    <script src="la_complex.js?v=37"></script>
     <script src="app.js?v=36"></script>
     <script src="practice_1.js"></script>
     <script src="practice_2.js"></script>
